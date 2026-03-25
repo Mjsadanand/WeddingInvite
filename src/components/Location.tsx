@@ -9,6 +9,8 @@ type LocationProps = {
 }
 
 function Location({ weddingDate, weddingTime, venueName, lat, lng }: LocationProps) {
+  const contactNumbers = ['8310861235', '7829118313', '8553393038']
+
   const handleDirections = () => {
     if (!navigator.geolocation) {
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank', 'noopener,noreferrer')
@@ -65,6 +67,17 @@ function Location({ weddingDate, weddingTime, venueName, lat, lng }: LocationPro
       <button className="gold-btn" onClick={handleDirections}>
         Get Directions
       </button>
+
+      <section className="contact-panel" aria-label="Family contacts">
+        <h3>Call Family</h3>
+        <div className="contact-grid">
+          {contactNumbers.map((number) => (
+            <a key={number} className="gold-btn contact-btn" href={`tel:${number}`}>
+              {number}
+            </a>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

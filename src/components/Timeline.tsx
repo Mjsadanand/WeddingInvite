@@ -2,24 +2,24 @@ import { motion } from 'framer-motion'
 
 const timelineEvents = [
   {
-    title: 'First Meet',
-    date: 'February 2019',
-    detail: 'A chance encounter at a family gathering became the beginning of something beautiful.',
+    title: 'Family Blessings & Invitation',
+    date: 'March 2026',
+    detail: 'With the blessings of elders and families, the wedding invitation was joyfully shared with loved ones.',
   },
   {
-    title: 'Proposal',
-    date: 'August 2023',
-    detail: 'Under a starlit sky, a heartfelt promise turned into a forever yes.',
+    title: 'Reception / Wedding Program',
+    date: '12 April 2026 · Around 7:30 PM',
+    detail: 'An evening of celebration, greetings, photos, and dinner with family and friends.',
   },
   {
-    title: 'Engagement',
-    date: 'January 2026',
-    detail: 'Our families came together in joy to bless our new chapter.',
+    title: 'Wedding Ceremony',
+    date: '13 April 2026 · Muhurta around 12:38 PM',
+    detail: 'Sacred wedding rituals and blessings as the couple begins a beautiful journey of love and togetherness.',
   },
   {
-    title: 'Wedding',
-    date: 'December 2026',
-    detail: 'The sacred vows, vibrant rituals, and celebration of two souls becoming one.',
+    title: 'Lunch & Blessings',
+    date: '13 April 2026 · Post Ceremony',
+    detail: 'A warm gathering with family elders and guests to bless the newly married couple.',
   },
 ]
 

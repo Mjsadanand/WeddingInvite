@@ -29,11 +29,11 @@ const Gallery = lazy(() => import('./components/Gallery'))
 
 gsap.registerPlugin(ScrollTrigger)
 
-const WEDDING_DATE = '2026-12-12T18:30:00+05:30'
+const WEDDING_DATE = '2026-04-13T12:38:00+05:30'
 const DESTINATION = {
-  name: 'Rajmahal Palace, Jaipur',
-  lat: 26.9124,
-  lng: 75.7873,
+  name: 'Gurubhavan Kalyan Mantapa, Municipal Ground Road, Haveri',
+  lat: 14.795,
+  lng: 75.399,
 }
 
 type TabKey = 'home' | 'location' | 'gallery'
@@ -165,7 +165,7 @@ function App() {
 
   const shareLink = useMemo(() => {
     const venue = `${DESTINATION.name} (${DESTINATION.lat}, ${DESTINATION.lng})`
-    const message = `You are invited to our wedding!\n${window.location.href}\nVenue: ${venue}`
+    const message = `With the blessings of elders, we invite you to celebrate the wedding of Mr. Dayanand M and Ms. Shweta (Neha).\nDate: 13 April 2026, Muhurta around 12:38 PM\nReception: 12 April 2026, around 7:30 PM\nVenue: ${venue}\n${window.location.href}`
     return `https://wa.me/?text=${encodeURIComponent(message)}`
   }, [])
 
@@ -231,8 +231,8 @@ function App() {
                 <Hero
                   sectionId="hero"
                   weddingDate={WEDDING_DATE}
-                  brideName="Ananya"
-                  groomName="Arjun"
+                  brideName="Shweta (Neha)"
+                  groomName="Dayanand M"
                 />
 
                 <section id="timeline" className="section-shell section-frame">
@@ -264,8 +264,8 @@ function App() {
               >
                 <section id="details" className="section-shell section-frame parallax-layer location-page">
                   <Location
-                    weddingDate="12 December 2026"
-                    weddingTime="6:30 PM Onwards"
+                    weddingDate="13 April 2026"
+                    weddingTime="Muhurta around 12:38 PM"
                     venueName={DESTINATION.name}
                     lat={DESTINATION.lat}
                     lng={DESTINATION.lng}
