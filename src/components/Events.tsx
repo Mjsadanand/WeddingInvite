@@ -36,14 +36,17 @@ const events = [
 function Events() {
   return (
     <div>
+      <p className="section-label">Schedule</p>
       <h2>Wedding Festivities</h2>
       <div className="events-grid">
         {events.map((event) => (
           <motion.article
             key={event.title}
             className="event-card"
-            whileHover={{ scale: 1.03, boxShadow: '0 0 28px rgba(255, 215, 0, 0.3)' }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
             <h3>{event.title}</h3>
             <p>{event.date} · {event.time}</p>

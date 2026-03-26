@@ -97,63 +97,73 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
   }
 
   return (
-    <section id={sectionId} className="hero section-shell parallax-layer">
+    <section id={sectionId} className="hero section-shell">
       <audio ref={audioRef} src={MUSIC_URL} autoPlay muted loop preload="metadata" />
 
       <div className="petal-wrap" aria-hidden="true">
         {Array.from({ length: 12 }, (_, index) => (
-          <span key={`petal-${index}`} className="petal" />
+          <span 
+            key={`petal-${index}`} 
+            className="petal" 
+            style={{
+              left: `${(index * 8) + 5}%`,
+              top: `${Math.random() * 80}%`,
+              animationDelay: `${index * 0.5}s`
+            }}
+          />
         ))}
       </div>
 
-      <motion.p
-        className="family-line"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 0.8 }}
-      >
-        Together with their families
-      </motion.p>
+      <div className="hero-content">
+        <motion.div
+          className="hero-badge"
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <p className="save-date-label">Save The Date</p>
+          <div className="couple-names">
+            <span className="groom-name script-font">{groomName.split(' ')[0]}</span>
+            <span className="bride-name script-font">{brideName.split(' ')[0]}</span>
+          </div>
+          <div className="wedding-date-badge">
+            <span>APRIL</span>
+            <span className="date-number">13</span>
+            <span>2026</span>
+          </div>
+        </motion.div>
 
-      <motion.h1
-        className="couple-names"
-        initial={{ opacity: 0, y: 35 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 1.1 }}
-      >
-        <span>{brideName}</span>
-        <span className="heart">❤</span>
-        <span>{groomName}</span>
-      </motion.h1>
+        <motion.p
+          className="hero-subline"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: 0.3 }}
+        >
+          Join us as two hearts become one in a celebration of love, tradition, and forever.
+        </motion.p>
 
-      <motion.p
-        className="hero-subline shimmer"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.2, delay: 0.2 }}
-      >
-        Join us as two hearts become one in a celebration of love, tradition, and forever.
-      </motion.p>
+        <div className="countdown-grid">
+          {countdownItems.map((item) => (
+            <motion.div
+              key={item.label}
+              className="countdown-item"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <strong>{String(item.value).padStart(2, '0')}</strong>
+              <span>{item.label}</span>
+            </motion.div>
+          ))}
+        </div>
 
-      <div className="countdown-grid">
-        {countdownItems.map((item) => (
-          <motion.div
-            key={item.label}
-            className="countdown-item"
-            whileHover={{ y: -4, boxShadow: '0 0 24px rgba(255, 215, 0, 0.28)' }}
-          >
-            <strong>{String(item.value).padStart(2, '0')}</strong>
-            <span>{item.label}</span>
-          </motion.div>
-        ))}
+        <button className="music-toggle" onClick={() => void toggleMusic()}>
+          {isMusicOn ? '🔊 Music On' : '🔇 Music Off'}
+        </button>
       </div>
-
-      <button className="music-toggle" onClick={() => void toggleMusic()}>
-        {isMusicOn ? 'Music: On' : 'Music: Off'}
-      </button>
     </section>
   )
 }

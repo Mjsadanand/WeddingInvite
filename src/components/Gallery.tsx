@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import type { GalleryImage } from '../utils/supabaseClient'
 
 type GalleryProps = {
@@ -9,6 +9,8 @@ type GalleryProps = {
 
 function Gallery({ images, isLoading }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const touchStartX = useRef<number>(0)
+  const touchEndX = useRef<number>(0)
 
   const closeViewer = useCallback(() => {
     setActiveIndex(null)
@@ -45,6 +47,27 @@ function Gallery({ images, isLoading }: GalleryProps) {
       return (previous - 1 + images.length) % images.length
     })
   }, [images.length])
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    const swipeThreshold = 50
+    const diff = touchStartX.current - touchEndX.current
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        showNext()
+      } else {
+        showPrevious()
+      }
+    }
+  }
 
   const activeImage = activeIndex !== null ? images[activeIndex] : undefined
 
@@ -117,39 +140,34 @@ function Gallery({ images, isLoading }: GalleryProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeViewer}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
+            <button type="button" className="lightbox-close" onClick={closeViewer} aria-label="Close preview">
+              ×
+            </button>
+
             <motion.div
               className="lightbox-content"
-              initial={{ opacity: 0, y: 18, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 14, scale: 0.97 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
               onClick={(event) => event.stopPropagation()}
             >
-              <button type="button" className="lightbox-close" onClick={closeViewer} aria-label="Close preview">
-                ×
-              </button>
-
               <img
                 src={activeImage.image_url}
                 alt="Wedding memory preview"
                 className="lightbox-image"
               />
-
-              {images.length > 1 ? (
-                <div className="lightbox-controls">
-                  <button type="button" className="lightbox-nav" onClick={showPrevious} aria-label="Previous image">
-                    Prev
-                  </button>
-                  <p>
-                    {(activeIndex ?? 0) + 1} / {images.length}
-                  </p>
-                  <button type="button" className="lightbox-nav" onClick={showNext} aria-label="Next image">
-                    Next
-                  </button>
-                </div>
-              ) : null}
             </motion.div>
+
+            {images.length > 1 ? (
+              <div className="lightbox-counter">
+                {(activeIndex ?? 0) + 1} / {images.length}
+              </div>
+            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>

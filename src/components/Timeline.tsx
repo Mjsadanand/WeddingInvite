@@ -26,7 +26,8 @@ const timelineEvents = [
 function Timeline() {
   return (
     <div>
-      <h2>Love Story Timeline</h2>
+      <p className="section-label">Our Story</p>
+      <h2>Marriage  Story Timeline</h2>
       <div className="timeline">
         {timelineEvents.map((event, index) => (
           <motion.article
@@ -37,7 +38,6 @@ function Timeline() {
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
           >
-            <span className="timeline-dot" aria-hidden="true" />
             <h3>{event.title}</h3>
             <p className="timeline-date">{event.date}</p>
             <p>{event.detail}</p>

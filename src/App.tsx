@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import OpeningScreen from './components/OpeningScreen'
+import BottomNav from './components/BottomNav'
 import {
   fetchWeddingImages,
   isSupabaseConfigured,
@@ -216,6 +217,24 @@ function App() {
       {!isInviteOpen ? <OpeningScreen onOpenComplete={() => setIsInviteOpen(true)} /> : null}
 
       <div className={`wedding-app ${isInviteOpen ? 'show-content' : 'hide-content'}`}>
+        {/* Top Navigation */}
+        <nav className="top-nav">
+          <div className="nav-container">
+            <ul className="nav-menu">
+              {tabs.map((tab) => (
+                <li key={tab.key}>
+                  <button
+                    className={`nav-link ${activeTab === tab.key ? 'active' : ''}`}
+                    onClick={() => setActiveTab(tab.key)}
+                  >
+                    {tab.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
         <main className="page-shell" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
           <Suspense fallback={<div className="page-loader">Loading page...</div>}>
             <AnimatePresence mode="wait">
@@ -235,20 +254,26 @@ function App() {
                   groomName="Dayanand M"
                 />
 
-                <section id="timeline" className="section-shell section-frame">
-                  <Timeline />
+                <section id="timeline" className="section-shell timeline-section">
+                  <div className="section-container">
+                    <Timeline />
+                  </div>
                 </section>
 
-                <section id="events" className="section-shell section-frame parallax-layer">
-                  <Events />
+                <section id="events" className="section-shell events-section">
+                  <div className="section-container">
+                    <Events />
+                  </div>
                 </section>
 
-                <section className="section-shell section-frame share-panel">
-                  <h3>Share The Invitation</h3>
-                  <p>Send this wedding invite to your loved ones on WhatsApp.</p>
-                  <a className="gold-btn whatsapp-btn" href={shareLink} target="_blank" rel="noreferrer">
-                    Share on WhatsApp
-                  </a>
+                <section className="section-shell share-panel">
+                  <div className="section-container">
+                    <h3>Share The Invitation</h3>
+                    <p>Send this wedding invite to your loved ones on WhatsApp.</p>
+                    <a className="primary-btn whatsapp-btn" href={shareLink} target="_blank" rel="noreferrer">
+                      Share on WhatsApp
+                    </a>
+                  </div>
                 </section>
               </motion.div>
             ) : null}
@@ -262,14 +287,16 @@ function App() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.45, ease: 'easeOut' }}
               >
-                <section id="details" className="section-shell section-frame parallax-layer location-page">
-                  <Location
-                    weddingDate="13 April 2026"
-                    weddingTime="Muhurta around 12:38 PM"
-                    venueName={DESTINATION.name}
-                    lat={DESTINATION.lat}
-                    lng={DESTINATION.lng}
-                  />
+                <section id="details" className="section-shell location-section">
+                  <div className="section-container">
+                    <Location
+                      weddingDate="13 April 2026"
+                      weddingTime="Muhurta around 12:38 PM"
+                      venueName={DESTINATION.name}
+                      lat={DESTINATION.lat}
+                      lng={DESTINATION.lng}
+                    />
+                  </div>
                 </section>
               </motion.div>
             ) : null}
@@ -283,16 +310,24 @@ function App() {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.45, ease: 'easeOut' }}
               >
-                <section id="gallery" className="section-shell section-frame gallery-page">
-                  <Upload
-                    onUploadSuccess={(newImage) => {
-                      setImages((previous) => [newImage, ...previous])
-                    }}
-                  />
+                <section id="gallery" className="section-shell gallery-section">
+                  <div className="section-container">
+                    <div className="gallery-header">
+                      <p className="section-label">Photography</p>
+                      <h2>Captured Moments</h2>
+                      <p className="gallery-subtitle">Share your favorite moments from the celebration</p>
+                    </div>
 
-                  {galleryError ? <p className="gallery-error">{galleryError}</p> : null}
+                    {galleryError ? <p className="gallery-error">{galleryError}</p> : null}
 
-                  <Gallery images={images} isLoading={isLoadingImages} />
+                    <Gallery images={images} isLoading={isLoadingImages} />
+
+                    <Upload
+                      onUploadSuccess={(newImage) => {
+                        setImages((previous) => [newImage, ...previous])
+                      }}
+                    />
+                  </div>
                 </section>
               </motion.div>
             ) : null}
@@ -300,26 +335,11 @@ function App() {
           </Suspense>
         </main>
 
-        <nav className="bottom-nav" aria-label="Main navigation">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.key
-
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                className={`nav-icon-btn ${isActive ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.key)}
-                aria-label={tab.label}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <Icon className="nav-icon" aria-hidden="true" />
-              </button>
-            )
-          })}
-        </nav>
+        {/* Bottom Navigation for Mobile/Tablet */}
       </div>
+
+      {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
+      {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}
     </>
   )
 }
