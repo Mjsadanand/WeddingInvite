@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/purity */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 type OpeningScreenProps = {
@@ -8,6 +8,16 @@ type OpeningScreenProps = {
 
 function OpeningScreen({ onOpenComplete }: OpeningScreenProps) {
   const [isOpening, setIsOpening] = useState(false)
+
+  useEffect(() => {
+    const preloader = new Audio('/weddingmusic.mp3')
+    preloader.preload = 'auto'
+    preloader.load()
+
+    return () => {
+      preloader.src = ''
+    }
+  }, [])
 
   const handleOpen = () => {
     setIsOpening(true)
