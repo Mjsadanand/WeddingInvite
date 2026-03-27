@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { uploadToCloudinary } from '../utils/cloudinaryClient'
 import { isSupabaseConfigured, saveGalleryImageUrl, type GalleryImage } from '../utils/supabaseClient'
 
@@ -8,29 +8,45 @@ type UploadProps = {
 
 function Upload({ onUploadSuccess }: UploadProps) {
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const requiredPasscode = import.meta.env.VITE_UPLOAD_PASSCODE as string | undefined
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [passcode, setPasscode] = useState<string>('')
+  const [isPasscodeVerified, setIsPasscodeVerified] = useState<boolean>(false)
 
-  const isConfigured = Boolean(uploadPreset && isSupabaseConfigured)
+  const isConfigured = Boolean(uploadPreset && isSupabaseConfigured && requiredPasscode)
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null
-    setSelectedFile(file)
+    const files = Array.from(event.target.files ?? [])
     setError(null)
 
-    if (!file) {
-      setPreviewUrl(null)
+    if (files.length === 0) {
+      setSelectedFiles([])
+      setPreviewUrls([])
       return
     }
 
-    setPreviewUrl(URL.createObjectURL(file))
+    setSelectedFiles(files)
+    setPreviewUrls(files.map((file) => URL.createObjectURL(file)))
+  }
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [previewUrls])
+
+  const resetSelection = () => {
+    previewUrls.forEach((url) => URL.revokeObjectURL(url))
+    setSelectedFiles([])
+    setPreviewUrls([])
   }
 
   const handleUpload = async () => {
-    if (!selectedFile || !uploadPreset) {
+    if (selectedFiles.length === 0 || !uploadPreset) {
       return
     }
 
@@ -38,12 +54,28 @@ function Upload({ onUploadSuccess }: UploadProps) {
     setError(null)
 
     try {
-      const cloudinaryResult = await uploadToCloudinary(selectedFile, uploadPreset)
-      const uploadedImage = await saveGalleryImageUrl(cloudinaryResult.secure_url)
-      onUploadSuccess(uploadedImage)
-      setSelectedFile(null)
-      setPreviewUrl(null)
-      setIsModalOpen(false)
+      const uploadResults = await Promise.allSettled(
+        selectedFiles.map(async (file) => {
+          const cloudinaryResult = await uploadToCloudinary(file, uploadPreset)
+          return saveGalleryImageUrl(cloudinaryResult.secure_url)
+        }),
+      )
+
+      const successfulUploads = uploadResults.filter(
+        (result): result is PromiseFulfilledResult<GalleryImage> => result.status === 'fulfilled',
+      )
+      const failedCount = uploadResults.length - successfulUploads.length
+
+      successfulUploads.forEach((result) => onUploadSuccess(result.value))
+
+      if (failedCount > 0) {
+        setError(
+          `Uploaded ${successfulUploads.length} image(s). ${failedCount} failed. Please retry remaining files.`,
+        )
+      } else {
+        resetSelection()
+        setIsModalOpen(false)
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Upload failed. Please try again.'
       setError(message)
@@ -52,11 +84,27 @@ function Upload({ onUploadSuccess }: UploadProps) {
     }
   }
 
+  const handlePasscodeSubmit = () => {
+    if (!requiredPasscode) {
+      setError('Upload passcode is not configured. Set VITE_UPLOAD_PASSCODE in your .env file.')
+      return
+    }
+
+    if (passcode === requiredPasscode) {
+      setIsPasscodeVerified(true)
+      setError(null)
+    } else {
+      setError('Invalid passcode. Please try again.')
+      setPasscode('')
+    }
+  }
+
   const closeModal = () => {
     setIsModalOpen(false)
-    setSelectedFile(null)
-    setPreviewUrl(null)
+    resetSelection()
     setError(null)
+    setPasscode('')
+    setIsPasscodeVerified(false)
   }
 
   return (
@@ -69,6 +117,10 @@ function Upload({ onUploadSuccess }: UploadProps) {
 
       {!isSupabaseConfigured ? (
         <p className="upload-error">Supabase keys missing. Configure environment variables to enable uploads.</p>
+      ) : null}
+
+      {!requiredPasscode ? (
+        <p className="upload-error">Upload passcode missing. Set VITE_UPLOAD_PASSCODE in your .env file.</p>
       ) : null}
 
       {isConfigured ? (
@@ -92,50 +144,76 @@ function Upload({ onUploadSuccess }: UploadProps) {
             <h3>Upload Your Photos</h3>
             <p>Share your favorite moments from the celebration</p>
 
-            <div className="upload-actions">
-              <label htmlFor="camera-upload" className="upload-option-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                  <circle cx="12" cy="13" r="4" />
-                </svg>
-                Click Selfie
-              </label>
-              <input
-                id="camera-upload"
-                type="file"
-                accept="image/*"
-                capture="user"
-                onChange={onFileChange}
-                className="hidden-input"
-              />
-
-              <label htmlFor="gallery-upload" className="upload-option-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                Choose Photo
-              </label>
-              <input
-                id="gallery-upload"
-                type="file"
-                accept="image/*"
-                onChange={onFileChange}
-                className="hidden-input"
-              />
-            </div>
-
-            {previewUrl ? (
+            {!isPasscodeVerified ? (
               <div className="preview-card">
-                <p>Preview</p>
-                <img src={previewUrl} alt="Upload preview" loading="lazy" />
+                <p>Enter passcode to continue</p>
+                <input
+                  type="password"
+                  value={passcode}
+                  onChange={(event) => setPasscode(event.target.value)}
+                  placeholder="Enter upload passcode"
+                  className="upload-passcode-input"
+                />
+                <button
+                  className="primary-btn"
+                  onClick={handlePasscodeSubmit}
+                  disabled={!passcode.trim()}
+                >
+                  Unlock Upload
+                </button>
+              </div>
+            ) : (
+              <div className="upload-actions">
+                <label htmlFor="camera-upload" className="upload-option-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  Click Selfie
+                </label>
+                <input
+                  id="camera-upload"
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  multiple
+                  onChange={onFileChange}
+                  className="hidden-input"
+                />
+
+                <label htmlFor="gallery-upload" className="upload-option-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                  Choose Photo
+                </label>
+                <input
+                  id="gallery-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={onFileChange}
+                  className="hidden-input"
+                />
+              </div>
+            )}
+
+            {previewUrls.length > 0 ? (
+              <div className="preview-card">
+                <p>Selected {selectedFiles.length} photo(s)</p>
+                <div className="preview-grid">
+                  {previewUrls.map((url, index) => (
+                    <img key={url} src={url} alt={`Upload preview ${index + 1}`} loading="lazy" />
+                  ))}
+                </div>
                 <button
                   className="primary-btn"
                   onClick={() => void handleUpload()}
-                  disabled={isUploading || !selectedFile}
+                  disabled={isUploading || selectedFiles.length === 0}
                 >
-                  {isUploading ? 'Uploading...' : '⬆️ Upload Photo'}
+                  {isUploading ? 'Uploading...' : '⬆️ Upload Photos'}
                 </button>
               </div>
             ) : null}

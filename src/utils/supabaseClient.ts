@@ -55,6 +55,16 @@ export async function saveGalleryImageUrl(imageUrl: string): Promise<GalleryImag
   return data
 }
 
+export async function deleteGalleryImage(imageId: string): Promise<void> {
+  const client = getSupabase()
+
+  const { error } = await client.from(TABLE_NAME).delete().eq('id', imageId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 export async function uploadWeddingImage(file: File): Promise<GalleryImage> {
   const client = getSupabase()
   const extension = file.name.split('.').pop() ?? 'jpg'

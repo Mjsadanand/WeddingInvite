@@ -15,6 +15,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import OpeningScreen from './components/OpeningScreen'
 import BottomNav from './components/BottomNav'
 import {
+  deleteGalleryImage,
   fetchWeddingImages,
   isSupabaseConfigured,
   subscribeToGallery,
@@ -73,11 +74,14 @@ function GalleryIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 function App() {
+  const allowedDeleteIp = import.meta.env.VITE_DELETE_ALLOWED_IP as string | undefined
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [images, setImages] = useState<GalleryImage[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(true)
   const [galleryError, setGalleryError] = useState<string | null>(null)
+  const [isDeleteEnabled, setIsDeleteEnabled] = useState(false)
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
 
@@ -119,6 +123,49 @@ function App() {
       subscription.unsubscribe()
     }
   }, [loadImages])
+
+  useEffect(() => {
+    if (!allowedDeleteIp) {
+      setIsDeleteEnabled(false)
+      return
+    }
+
+    const resolveIpAccess = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json')
+        if (!response.ok) {
+          setIsDeleteEnabled(false)
+          return
+        }
+
+        const payload = (await response.json()) as { ip?: string }
+        setIsDeleteEnabled(payload.ip === allowedDeleteIp)
+      } catch {
+        setIsDeleteEnabled(false)
+      }
+    }
+
+    void resolveIpAccess()
+  }, [allowedDeleteIp])
+
+  const handleDeleteImage = useCallback(async (imageId: string) => {
+    if (!isDeleteEnabled) {
+      return
+    }
+
+    setDeletingImageId(imageId)
+    setGalleryError(null)
+
+    try {
+      await deleteGalleryImage(imageId)
+      setImages((previous) => previous.filter((image) => image.id !== imageId))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to delete image right now.'
+      setGalleryError(message)
+    } finally {
+      setDeletingImageId(null)
+    }
+  }, [isDeleteEnabled])
 
   useEffect(() => {
     if (!isInviteOpen) {
@@ -320,7 +367,13 @@ function App() {
 
                     {galleryError ? <p className="gallery-error">{galleryError}</p> : null}
 
-                    <Gallery images={images} isLoading={isLoadingImages} />
+                    <Gallery
+                      images={images}
+                      isLoading={isLoadingImages}
+                      canDelete={isDeleteEnabled}
+                      deletingImageId={deletingImageId}
+                      onDeleteImage={handleDeleteImage}
+                    />
 
                     <Upload
                       onUploadSuccess={(newImage) => {

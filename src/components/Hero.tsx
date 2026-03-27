@@ -16,7 +16,7 @@ type Countdown = {
   seconds: number
 }
 
-const MUSIC_URL = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_85d0ce87f9.mp3?filename=romantic-wedding-piano-17311.mp3'
+const MUSIC_URL = '/weddingmusic.mp3'
 
 const getCountdown = (targetDate: string): Countdown => {
   const diff = new Date(targetDate).getTime() - Date.now()
@@ -37,6 +37,7 @@ const getCountdown = (targetDate: string): Countdown => {
 function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
   const [countdown, setCountdown] = useState<Countdown>(() => getCountdown(weddingDate))
   const [isMusicOn, setIsMusicOn] = useState(false)
+  const [isAudioReady, setIsAudioReady] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -48,6 +49,34 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
       window.clearInterval(timer)
     }
   }, [weddingDate])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleCanPlayThrough = () => {
+      setIsAudioReady(true)
+      // Autoplay with sound after audio is fully loaded
+      audio.muted = false
+      audio.play().catch(() => {
+        // Browser blocked autoplay - user can click button instead
+        setIsMusicOn(false)
+      })
+    }
+
+    const handleError = () => {
+      console.error('Error loading audio file')
+      setIsAudioReady(false)
+    }
+
+    audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true })
+    audio.addEventListener('error', handleError)
+
+    return () => {
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough)
+      audio.removeEventListener('error', handleError)
+    }
+  }, [])
 
   useEffect(() => {
     const petals = gsap.utils.toArray<HTMLElement>('.petal')
@@ -70,6 +99,18 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
     }
   }, [])
 
+  const petals = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, index) => ({
+        id: `petal-${index}`,
+        left: `${(index * 8) + 5}%`,
+        // eslint-disable-next-line react-hooks/purity
+        top: `${Math.random() * 80}%`,
+        delay: `${index * 0.5}s`,
+      })),
+    [],
+  )
+
   const countdownItems = useMemo(
     () => [
       { label: 'Days', value: countdown.days },
@@ -81,7 +122,7 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
   )
 
   const toggleMusic = async () => {
-    if (!audioRef.current) {
+    if (!audioRef.current || !isAudioReady) {
       return
     }
 
@@ -91,24 +132,34 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
       return
     }
 
-    audioRef.current.muted = false
-    await audioRef.current.play()
-    setIsMusicOn(true)
+    try {
+      await audioRef.current.play()
+      setIsMusicOn(true)
+    } catch (error) {
+      console.error('Error playing audio:', error)
+      setIsMusicOn(false)
+    }
   }
 
   return (
     <section id={sectionId} className="hero section-shell">
-      <audio ref={audioRef} src={MUSIC_URL} autoPlay muted loop preload="metadata" />
+      <audio 
+        ref={audioRef} 
+        src={MUSIC_URL} 
+        loop 
+        preload="auto"
+        crossOrigin="anonymous"
+      />
 
       <div className="petal-wrap" aria-hidden="true">
-        {Array.from({ length: 12 }, (_, index) => (
+        {petals.map((petal) => (
           <span 
-            key={`petal-${index}`} 
+            key={petal.id} 
             className="petal" 
             style={{
-              left: `${(index * 8) + 5}%`,
-              top: `${Math.random() * 80}%`,
-              animationDelay: `${index * 0.5}s`
+              left: petal.left,
+              top: petal.top,
+              animationDelay: petal.delay
             }}
           />
         ))}
@@ -160,8 +211,13 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
           ))}
         </div>
 
-        <button className="music-toggle" onClick={() => void toggleMusic()}>
-          {isMusicOn ? '🔊 Music On' : '🔇 Music Off'}
+        <button 
+          className="music-toggle" 
+          onClick={() => void toggleMusic()}
+          disabled={!isAudioReady}
+          title={isAudioReady ? 'Toggle music' : 'Loading audio...'}
+        >
+          {!isAudioReady ? '⏳ Loading...' : isMusicOn ? '🔊 Music On' : '🔇 Music Off'}
         </button>
       </div>
     </section>

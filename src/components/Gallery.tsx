@@ -5,9 +5,12 @@ import type { GalleryImage } from '../utils/supabaseClient'
 type GalleryProps = {
   images: GalleryImage[]
   isLoading: boolean
+  canDelete: boolean
+  deletingImageId: string | null
+  onDeleteImage: (imageId: string) => void
 }
 
-function Gallery({ images, isLoading }: GalleryProps) {
+function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
@@ -120,6 +123,22 @@ function Gallery({ images, isLoading }: GalleryProps) {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.45, delay: Math.min(index * 0.03, 0.18) }}
           >
+            {canDelete ? (
+              <button
+                type="button"
+                className="gallery-delete-btn"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onDeleteImage(image.id)
+                }}
+                disabled={deletingImageId === image.id}
+                aria-label="Delete image"
+                title="Delete photo"
+              >
+                {deletingImageId === image.id ? 'Deleting...' : 'Delete'}
+              </button>
+            ) : null}
+
             <button
               type="button"
               className="gallery-item-btn"
@@ -167,6 +186,24 @@ function Gallery({ images, isLoading }: GalleryProps) {
               <div className="lightbox-counter">
                 {(activeIndex ?? 0) + 1} / {images.length}
               </div>
+            ) : null}
+
+            {canDelete ? (
+              <button
+                type="button"
+                className="lightbox-delete-btn"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (!activeImage) {
+                    return
+                  }
+                  onDeleteImage(activeImage.id)
+                  closeViewer()
+                }}
+                disabled={activeImage ? deletingImageId === activeImage.id : false}
+              >
+                {activeImage && deletingImageId === activeImage.id ? 'Deleting...' : 'Delete Photo'}
+              </button>
             ) : null}
           </motion.div>
         ) : null}
