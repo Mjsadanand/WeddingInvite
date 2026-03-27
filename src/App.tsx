@@ -74,16 +74,20 @@ function GalleryIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 function App() {
-  const allowedDeleteIp = import.meta.env.VITE_DELETE_ALLOWED_IP as string | undefined
+  const deletePasscode = import.meta.env.VITE_DELETE_PASSCODE as string | undefined
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [images, setImages] = useState<GalleryImage[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(true)
   const [galleryError, setGalleryError] = useState<string | null>(null)
   const [isDeleteEnabled, setIsDeleteEnabled] = useState(false)
+  const [adminNotice, setAdminNotice] = useState<string | null>(null)
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
+  const [adminPasscodeInput, setAdminPasscodeInput] = useState('')
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
+  const adminLongPressTimerRef = useRef<number | null>(null)
 
   const loadImages = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -124,29 +128,61 @@ function App() {
     }
   }, [loadImages])
 
-  useEffect(() => {
-    if (!allowedDeleteIp) {
+  const clearAdminLongPressTimer = useCallback(() => {
+    if (adminLongPressTimerRef.current !== null) {
+      window.clearTimeout(adminLongPressTimerRef.current)
+      adminLongPressTimerRef.current = null
+    }
+  }, [])
+
+  const requestAdminDeleteAccess = useCallback(() => {
+    if (isDeleteEnabled) {
       setIsDeleteEnabled(false)
+      setAdminNotice('Admin mode disabled.')
       return
     }
 
-    const resolveIpAccess = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json')
-        if (!response.ok) {
-          setIsDeleteEnabled(false)
-          return
-        }
-
-        const payload = (await response.json()) as { ip?: string }
-        setIsDeleteEnabled(payload.ip === allowedDeleteIp)
-      } catch {
-        setIsDeleteEnabled(false)
-      }
+    if (!deletePasscode) {
+      setAdminNotice('Delete passcode is not configured. Set VITE_DELETE_PASSCODE in your .env file.')
+      return
     }
 
-    void resolveIpAccess()
-  }, [allowedDeleteIp])
+    setAdminPasscodeInput('')
+    setIsAdminModalOpen(true)
+  }, [deletePasscode, isDeleteEnabled])
+
+  const closeAdminModal = useCallback(() => {
+    setIsAdminModalOpen(false)
+    setAdminPasscodeInput('')
+  }, [])
+
+  const submitAdminPasscode = useCallback(() => {
+    if (!deletePasscode) {
+      setAdminNotice('Delete passcode is not configured. Set VITE_DELETE_PASSCODE in your .env file.')
+      closeAdminModal()
+      return
+    }
+
+    if (adminPasscodeInput.trim() === deletePasscode.trim()) {
+      setIsDeleteEnabled(true)
+      setAdminNotice('Admin mode enabled for this session.')
+      closeAdminModal()
+      return
+    }
+
+    setAdminNotice('Incorrect admin passcode.')
+  }, [adminPasscodeInput, closeAdminModal, deletePasscode])
+
+  const handleGalleryTitlePressStart = useCallback(() => {
+    clearAdminLongPressTimer()
+    adminLongPressTimerRef.current = window.setTimeout(() => {
+      requestAdminDeleteAccess()
+    }, 700)
+  }, [clearAdminLongPressTimer, requestAdminDeleteAccess])
+
+  const handleGalleryTitlePressEnd = useCallback(() => {
+    clearAdminLongPressTimer()
+  }, [clearAdminLongPressTimer])
 
   const handleDeleteImage = useCallback(async (imageId: string) => {
     if (!isDeleteEnabled) {
@@ -159,13 +195,14 @@ function App() {
     try {
       await deleteGalleryImage(imageId)
       setImages((previous) => previous.filter((image) => image.id !== imageId))
+      void loadImages()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to delete image right now.'
       setGalleryError(message)
     } finally {
       setDeletingImageId(null)
     }
-  }, [isDeleteEnabled])
+  }, [isDeleteEnabled, loadImages])
 
   useEffect(() => {
     if (!isInviteOpen) {
@@ -210,6 +247,33 @@ function App() {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
     }
   }, [activeTab, isInviteOpen])
+
+  useEffect(() => {
+    return () => {
+      clearAdminLongPressTimer()
+    }
+  }, [clearAdminLongPressTimer])
+
+  useEffect(() => {
+    if (!isAdminModalOpen) {
+      return undefined
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeAdminModal()
+      }
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [closeAdminModal, isAdminModalOpen])
 
   const shareLink = useMemo(() => {
     const venue = `${DESTINATION.name} (${DESTINATION.lat}, ${DESTINATION.lng})`
@@ -361,11 +425,23 @@ function App() {
                   <div className="section-container">
                     <div className="gallery-header">
                       <p className="section-label">Photography</p>
-                      <h2>Captured Moments</h2>
+                      <h2
+                        className="gallery-title-admin"
+                        onTouchStart={handleGalleryTitlePressStart}
+                        onTouchEnd={handleGalleryTitlePressEnd}
+                        onTouchCancel={handleGalleryTitlePressEnd}
+                        onMouseDown={handleGalleryTitlePressStart}
+                        onMouseUp={handleGalleryTitlePressEnd}
+                        onMouseLeave={handleGalleryTitlePressEnd}
+                      >
+                        Captured Moments
+                      </h2>
                       <p className="gallery-subtitle">Share your favorite moments from the celebration</p>
                     </div>
 
                     {galleryError ? <p className="gallery-error">{galleryError}</p> : null}
+
+                    {adminNotice ? <p className="gallery-info">{adminNotice}</p> : null}
 
                     <Gallery
                       images={images}
@@ -390,6 +466,38 @@ function App() {
 
         {/* Bottom Navigation for Mobile/Tablet */}
       </div>
+
+      {isAdminModalOpen ? (
+        <div className="admin-modal-overlay" onClick={closeAdminModal}>
+          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+            <button className="modal-close" onClick={closeAdminModal}>
+              ×
+            </button>
+
+            <h3>Admin Access</h3>
+            <p>Enter passcode to enable delete options</p>
+
+            <div className="preview-card">
+              <input
+                type="password"
+                value={adminPasscodeInput}
+                onChange={(event) => setAdminPasscodeInput(event.target.value)}
+                placeholder="Enter admin passcode"
+                className="upload-passcode-input"
+                autoFocus
+              />
+
+              <button
+                className="primary-btn"
+                onClick={submitAdminPasscode}
+                disabled={!adminPasscodeInput.trim()}
+              >
+                Enable Delete Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
       {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}

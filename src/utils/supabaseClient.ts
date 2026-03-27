@@ -58,10 +58,18 @@ export async function saveGalleryImageUrl(imageUrl: string): Promise<GalleryImag
 export async function deleteGalleryImage(imageId: string): Promise<void> {
   const client = getSupabase()
 
-  const { error } = await client.from(TABLE_NAME).delete().eq('id', imageId)
+  const { data, error } = await client
+    .from(TABLE_NAME)
+    .delete()
+    .eq('id', imageId)
+    .select('id')
 
   if (error) {
     throw new Error(error.message)
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error('Delete was blocked or image was not found. Check Supabase RLS delete policy.')
   }
 }
 

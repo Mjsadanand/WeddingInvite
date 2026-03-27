@@ -18,6 +18,11 @@ on public.wedding_gallery
 for insert
 with check (true);
 
+create policy "Public can delete wedding gallery"
+on public.wedding_gallery
+for delete
+using (true);
+
 -- Create a public storage bucket named wedding-images in the Supabase dashboard.
 -- Then apply the following storage policies.
 
@@ -30,3 +35,9 @@ create policy "Public can upload wedding images"
 on storage.objects
 for insert
 with check (bucket_id = 'wedding-images');
+
+-- Optional: needed only if you store images in Supabase Storage and want delete there too.
+create policy "Public can delete wedding images"
+on storage.objects
+for delete
+using (bucket_id = 'wedding-images');

@@ -12,11 +12,16 @@ type GalleryProps = {
 
 function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [imageZoom, setImageZoom] = useState(1)
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
+  const lastTouchDistance = useRef<number>(0)
+  const lastTapTime = useRef<number>(0)
+  const lightboxImageRef = useRef<HTMLImageElement>(null)
 
   const closeViewer = useCallback(() => {
     setActiveIndex(null)
+    setImageZoom(1)
   }, [])
 
   const openViewer = (index: number) => {
@@ -51,15 +56,61 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
     })
   }, [images.length])
 
+  const getDistance = (touch1: Touch | React.Touch, touch2: Touch | React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX
+    const dy = touch1.clientY - touch2.clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  const handleDoubleTap = useCallback(() => {
+    if (imageZoom > 1) {
+      setImageZoom(1)
+    } else {
+      setImageZoom(2.5)
+    }
+  }, [imageZoom])
+
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Pinch start
+      lastTouchDistance.current = getDistance(e.touches[0], e.touches[1])
+      return
+    }
+
+    // Single touch or double tap
     touchStartX.current = e.touches[0].clientX
+    const now = Date.now()
+    if (now - lastTapTime.current < 300) {
+      handleDoubleTap()
+    }
+    lastTapTime.current = now
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX
+    if (e.touches.length === 2) {
+      // Pinch zoom
+      const distance = getDistance(e.touches[0], e.touches[1])
+      if (lastTouchDistance.current > 0) {
+        const ratio = distance / lastTouchDistance.current
+        setImageZoom((prev) => Math.max(1, Math.min(5, prev * ratio)))
+      }
+      lastTouchDistance.current = distance
+      return
+    }
+
+    // Single touch swipe
+    if (imageZoom === 1) {
+      touchEndX.current = e.touches[0].clientX
+    }
   }
 
   const handleTouchEnd = () => {
+    lastTouchDistance.current = 0
+
+    if (imageZoom > 1) {
+      return
+    }
+
     const swipeThreshold = 50
     const diff = touchStartX.current - touchEndX.current
 
@@ -76,6 +127,7 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
 
   useEffect(() => {
     if (activeIndex === null) {
+      document.body.classList.remove('lightbox-open')
       return undefined
     }
 
@@ -95,11 +147,13 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('lightbox-open')
     window.addEventListener('keydown', onKeyDown)
 
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
+      document.body.classList.remove('lightbox-open')
     }
   }, [activeIndex, closeViewer, images.length, showNext, showPrevious])
 
@@ -176,9 +230,11 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
               onClick={(event) => event.stopPropagation()}
             >
               <img
+                ref={lightboxImageRef}
                 src={activeImage.image_url}
                 alt="Wedding memory preview"
                 className="lightbox-image"
+                style={{ transform: `scale(${imageZoom})` }}
               />
             </motion.div>
 

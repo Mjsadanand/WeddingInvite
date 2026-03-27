@@ -577,6 +577,12 @@ h3 {
   margin-top: 0.5rem;
 }
 
+.gallery-title-admin {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
 .section-label {
   font-size: 0.85rem;
   color: var(--primary-pink);
@@ -943,6 +949,37 @@ h3 {
   backdrop-filter: blur(4px);
 }
 
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 1rem;
+}
+
+.admin-modal {
+  position: relative;
+  width: min(420px, 100%);
+  background: var(--white);
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.admin-modal h3 {
+  margin: 0 0 0.5rem;
+  color: var(--dark-text);
+  text-align: center;
+}
+
+.admin-modal > p {
+  color: var(--light-text);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
 .upload-modal {
   position: relative;
   width: min(500px, 100%);
@@ -1095,6 +1132,10 @@ h3 {
 }
 
 /* Lightbox */
+body.lightbox-open .bottom-nav {
+  display: none !important;
+}
+
 .lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -1149,6 +1190,8 @@ h3 {
   object-fit: contain;
   display: block;
   user-select: none;
+  transition: transform 0.1s ease-out;
+  touch-action: manipulation;
 }
 
 .lightbox-counter {
