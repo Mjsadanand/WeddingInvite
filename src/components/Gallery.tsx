@@ -18,11 +18,17 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
   const lastTouchDistance = useRef<number>(0)
   const lastTapTime = useRef<number>(0)
   const lightboxImageRef = useRef<HTMLImageElement>(null)
+  const hasLightboxHistoryEntry = useRef(false)
 
   const closeViewer = useCallback(() => {
+    if (activeIndex !== null && hasLightboxHistoryEntry.current) {
+      window.history.back()
+      return
+    }
+
     setActiveIndex(null)
     setImageZoom(1)
-  }, [])
+  }, [activeIndex])
 
   const openViewer = (index: number) => {
     setActiveIndex(index)
@@ -124,6 +130,34 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
   }
 
   const activeImage = activeIndex !== null ? images[activeIndex] : undefined
+
+  useEffect(() => {
+    if (activeIndex === null) {
+      hasLightboxHistoryEntry.current = false
+      return
+    }
+
+    if (!hasLightboxHistoryEntry.current) {
+      window.history.pushState({ lightboxOpen: true }, '')
+      hasLightboxHistoryEntry.current = true
+    }
+  }, [activeIndex])
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (activeIndex !== null) {
+        hasLightboxHistoryEntry.current = false
+        setActiveIndex(null)
+        setImageZoom(1)
+      }
+    }
+
+    window.addEventListener('popstate', onPopState)
+
+    return () => {
+      window.removeEventListener('popstate', onPopState)
+    }
+  }, [activeIndex])
 
   useEffect(() => {
     if (activeIndex === null) {

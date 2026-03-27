@@ -215,10 +215,283 @@ h3 {
 .opening-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
   z-index: 9999;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #f48fb1 100%);
+  perspective: 1500px;
+  overflow: hidden;
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.confetti:nth-child(4n) {
+  background: var(--primary-pink);
+}
+
+.confetti:nth-child(4n+1) {
+  background: #fff;
+  border-radius: 50%;
+}
+
+.confetti:nth-child(4n+2) {
+  background: #ff6b35;
+}
+
+.confetti:nth-child(4n+3) {
+  background: #ffd700;
+  width: 8px;
+  height: 8px;
+}
+
+/* Card Wrapper */
+.card-wrapper {
+  position: relative;
+  width: 500px;
+  height: 320px;
+  transform-style: preserve-3d;
+}
+
+/* Door Styles */
+.door {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(135deg, #fff 0%, #fef5f8 100%);
+  border: 3px solid var(--primary-pink);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.door-left {
+  left: 0;
+  transform-origin: left center;
+  border-right: 1.5px solid var(--primary-pink);
+}
+
+.door-right {
+  right: 0;
+  transform-origin: right center;
+  border-left: 1.5px solid var(--primary-pink);
+}
+
+.door-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.door-ornament {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--primary-pink);
+  border-radius: 50%;
+  position: relative;
+  opacity: 0.3;
+}
+
+.door-ornament::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--primary-pink);
+  border-radius: 50%;
+}
+
+/* Inner Content */
+.inner-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: -1;
+  background: linear-gradient(135deg, #fff5f8 0%, #ffe4ec 100%);
+  border-radius: 12px;
+  padding: 2rem;
+}
+
+.inner-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 3.5rem;
+  color: var(--primary-pink);
+  margin: 0 0 0.5rem 0;
+  line-height: 1;
+}
+
+.inner-subtitle {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  color: var(--dark-text);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 0 0 1rem 0;
+}
+
+.heart-icon {
+  font-size: 2.5rem;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+}
+
+/* Unlock Button */
+.unlock-btn {
+  border: none;
+  border-radius: 50px;
+  background: var(--white);
+  color: var(--primary-pink);
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 1.2rem 3rem;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.unlock-btn:hover {
+  background: var(--primary-pink);
+  color: var(--white);
+  box-shadow: 0 15px 40px rgba(233, 30, 99, 0.4);
+}
+
+.unlock-btn span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .opening-overlay {
+    gap: 0;
+    justify-content: stretch;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .card-wrapper {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .door {
+    border-radius: 0;
+  }
+
+  .inner-content {
+    border-radius: 0;
+  }
+  
+  .inner-title {
+    font-size: 2.8rem;
+  }
+  
+  .inner-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .heart-icon {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .door {
+    border: 2px solid var(--primary-pink);
+    border-radius: 0;
+  }
+  
+  .door-left {
+    border-right: 1px solid var(--primary-pink);
+  }
+  
+  .door-right {
+    border-left: 1px solid var(--primary-pink);
+  }
+  
+  .door-ornament {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--primary-pink);
+  }
+  
+  .door-ornament::before {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .inner-content {
+    border-radius: 0;
+    padding: 1.5rem;
+  }
+  
+  .inner-title {
+    font-size: 2.2rem;
+  }
+  
+  .inner-subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+  }
+  
+  .heart-icon {
+    font-size: 1.8rem;
+  }
+  
+  .unlock-btn {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+    font-size: 0.85rem;
+    padding: 1rem 2rem;
+  }
 }
 
 .wedding-card {
