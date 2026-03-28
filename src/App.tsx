@@ -32,6 +32,7 @@ const Gallery = lazy(() => import('./components/Gallery'))
 gsap.registerPlugin(ScrollTrigger)
 
 const WEDDING_DATE = '2026-04-13T12:38:00+05:30'
+const INVITE_OPENED_STORAGE_KEY = 'wedding_invite_opened'
 const DESTINATION = {
   name: 'Gurubhavan Kalyan Mantapa, Municipal Ground Road, Haveri',
   lat: 14.795,
@@ -144,7 +145,13 @@ function GalleryIcon(props: SVGProps<SVGSVGElement>) {
 
 function App() {
   const deletePasscode = import.meta.env.VITE_DELETE_PASSCODE as string | undefined
-  const [isInviteOpen, setIsInviteOpen] = useState(false)
+  const [isInviteOpen, setIsInviteOpen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    return window.localStorage.getItem(INVITE_OPENED_STORAGE_KEY) === 'true'
+  })
   const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [images, setImages] = useState<GalleryImage[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(true)
@@ -391,6 +398,11 @@ function App() {
     }
   }, [isMusicOn, isAudioReady])
 
+  const handleOpenComplete = useCallback(() => {
+    setIsInviteOpen(true)
+    window.localStorage.setItem(INVITE_OPENED_STORAGE_KEY, 'true')
+  }, [])
+
   const shareLink = useMemo(() => {
     const venue = `${DESTINATION.name} (${DESTINATION.lat}, ${DESTINATION.lng})`
     const message = `With the blessings of elders, we invite you to celebrate the wedding of Mr. Dayanand M and Ms. Shweta (Neha).\nDate: 13 April 2026, Muhurta around 12:38 PM\nReception: 12 April 2026, around 7:30 PM\nVenue: ${venue}\n${window.location.href}`
@@ -441,7 +453,7 @@ function App() {
 
   return (
     <>
-      {!isInviteOpen ? <OpeningScreen onOpenComplete={() => setIsInviteOpen(true)} /> : null}
+      {!isInviteOpen ? <OpeningScreen onOpenComplete={handleOpenComplete} /> : null}
 
       <div className={`wedding-app ${isInviteOpen ? 'show-content' : 'hide-content'}`}>
         {/* Top Navigation */}
