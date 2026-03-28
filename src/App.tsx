@@ -41,6 +41,75 @@ const DESTINATION = {
 type TabKey = 'home' | 'location' | 'gallery'
 type IconComponent = (props: SVGProps<SVGSVGElement>) => ReactElement
 
+type SkeletonBlockProps = {
+  className?: string
+}
+
+function SkeletonBlock({ className = '' }: SkeletonBlockProps) {
+  return <div className={`skeleton-block ${className}`.trim()} aria-hidden="true" />
+}
+
+type PageSkeletonProps = {
+  tab: TabKey
+}
+
+function PageSkeleton({ tab }: PageSkeletonProps) {
+  if (tab === 'location') {
+    return (
+      <div className="skeleton-page" aria-label="Loading location section">
+        <section className="section-shell">
+          <div className="section-container skeleton-stack">
+            <SkeletonBlock className="skeleton-title" />
+            <SkeletonBlock className="skeleton-line skeleton-line-medium" />
+            <SkeletonBlock className="skeleton-map" />
+            <div className="skeleton-row">
+              <SkeletonBlock className="skeleton-chip" />
+              <SkeletonBlock className="skeleton-chip" />
+              <SkeletonBlock className="skeleton-chip" />
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  if (tab === 'gallery') {
+    return (
+      <div className="skeleton-page" aria-label="Loading gallery section">
+        <section className="section-shell">
+          <div className="section-container skeleton-stack">
+            <SkeletonBlock className="skeleton-title" />
+            <SkeletonBlock className="skeleton-line" />
+            <div className="skeleton-gallery-grid">
+              {Array.from({ length: 6 }, (_, index) => (
+                <SkeletonBlock key={`gallery-skeleton-${index}`} className="skeleton-gallery-tile" />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
+  return (
+    <div className="skeleton-page" aria-label="Loading home section">
+      <section className="section-shell">
+        <div className="section-container skeleton-stack">
+          <SkeletonBlock className="skeleton-hero" />
+          <SkeletonBlock className="skeleton-title" />
+          <SkeletonBlock className="skeleton-line" />
+          <SkeletonBlock className="skeleton-line skeleton-line-short" />
+          <div className="skeleton-events-grid">
+            {Array.from({ length: 3 }, (_, index) => (
+              <SkeletonBlock key={`events-skeleton-${index}`} className="skeleton-event-card" />
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function HomeIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" {...props}>
@@ -85,9 +154,12 @@ function App() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [adminPasscodeInput, setAdminPasscodeInput] = useState('')
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
+    const [isMusicOn, setIsMusicOn] = useState(false)
+    const [isAudioReady, setIsAudioReady] = useState(false)
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
   const adminLongPressTimerRef = useRef<number | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const loadImages = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -275,6 +347,50 @@ function App() {
     }
   }, [closeAdminModal, isAdminModalOpen])
 
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleCanPlayThrough = () => {
+      setIsAudioReady(true)
+      audio.muted = false
+      audio.play().catch(() => {
+        setIsMusicOn(false)
+      })
+    }
+
+    const handleError = () => {
+      console.error('Error loading audio file')
+      setIsAudioReady(false)
+    }
+
+    audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true })
+    audio.addEventListener('error', handleError)
+
+    return () => {
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough)
+      audio.removeEventListener('error', handleError)
+    }
+  }, [])
+
+  const toggleMusic = useCallback(async () => {
+    if (!audioRef.current || !isAudioReady) return
+
+    if (isMusicOn) {
+      audioRef.current.pause()
+      setIsMusicOn(false)
+      return
+    }
+
+    try {
+      await audioRef.current.play()
+      setIsMusicOn(true)
+    } catch (error) {
+      console.error('Error playing audio:', error)
+      setIsMusicOn(false)
+    }
+  }, [isMusicOn, isAudioReady])
+
   const shareLink = useMemo(() => {
     const venue = `${DESTINATION.name} (${DESTINATION.lat}, ${DESTINATION.lng})`
     const message = `With the blessings of elders, we invite you to celebrate the wedding of Mr. Dayanand M and Ms. Shweta (Neha).\nDate: 13 April 2026, Muhurta around 12:38 PM\nReception: 12 April 2026, around 7:30 PM\nVenue: ${venue}\n${window.location.href}`
@@ -347,7 +463,7 @@ function App() {
         </nav>
 
         <main className="page-shell" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-          <Suspense fallback={<div className="page-loader">Loading page...</div>}>
+          <Suspense fallback={<PageSkeleton tab={activeTab} />}>
             <AnimatePresence mode="wait">
             {activeTab === 'home' ? (
               <motion.div
@@ -501,6 +617,34 @@ function App() {
 
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
       {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}
+
+        {/* Audio Element for Background Music */}
+        <audio ref={audioRef} src="/weddingmusic.mp3" loop preload="auto" crossOrigin="anonymous" />
+
+        {/* Music FAB Button - Global Control */}
+        {isInviteOpen && activeTab === 'home' ? (
+          <button
+            className="music-fab"
+            onClick={() => void toggleMusic()}
+            disabled={!isAudioReady}
+            title={isMusicOn ? 'Mute Music' : 'Play Music'}
+          >
+            <svg className="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {isMusicOn ? (
+                <>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M15.5 8.5a4 4 0 0 1 0 7M19 4a8 8 0 0 1 0 16" strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              ) : (
+                <>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="17" y1="9" x2="23" y2="15" strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              )}
+            </svg>
+          </button>
+        ) : null}
     </>
   )
 }

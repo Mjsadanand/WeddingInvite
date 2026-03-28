@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useState, useRef } from 'react'
+import { getGalleryThumbUrl, getLightboxUrl } from '../utils/cloudinaryClient'
 import type { GalleryImage } from '../utils/supabaseClient'
 
 type GalleryProps = {
@@ -130,6 +131,14 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
   }
 
   const activeImage = activeIndex !== null ? images[activeIndex] : undefined
+  const activeImageLightboxUrl = activeImage ? getLightboxUrl(activeImage.image_url, 1800) : undefined
+
+  const getGridImageSrcSet = (imageUrl: string) => {
+    const small = getGalleryThumbUrl(imageUrl, 360)
+    const medium = getGalleryThumbUrl(imageUrl, 640)
+    const large = getGalleryThumbUrl(imageUrl, 920)
+    return `${small} 360w, ${medium} 640w, ${large} 920w`
+  }
 
   useEffect(() => {
     if (activeIndex === null) {
@@ -191,6 +200,26 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
     }
   }, [activeIndex, closeViewer, images.length, showNext, showPrevious])
 
+  useEffect(() => {
+    if (activeIndex === null || images.length < 2) {
+      return
+    }
+
+    const nextIndex = (activeIndex + 1) % images.length
+    const previousIndex = (activeIndex - 1 + images.length) % images.length
+
+    const preloadUrls = [
+      getLightboxUrl(images[nextIndex].image_url, 1800),
+      getLightboxUrl(images[previousIndex].image_url, 1800),
+    ]
+
+    preloadUrls.forEach((url) => {
+      const preloaded = new Image()
+      preloaded.decoding = 'async'
+      preloaded.src = url
+    })
+  }, [activeIndex, images])
+
   if (isLoading) {
     return <p className="gallery-info">Loading gallery...</p>
   }
@@ -233,7 +262,14 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
               onClick={() => openViewer(index)}
               aria-label="Open image preview"
             >
-              <img src={image.image_url} alt="Wedding memory" loading="lazy" decoding="async" />
+              <img
+                src={getGalleryThumbUrl(image.image_url, 640)}
+                srcSet={getGridImageSrcSet(image.image_url)}
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
+                alt="Wedding memory"
+                loading="lazy"
+                decoding="async"
+              />
             </button>
           </motion.figure>
         ))}
@@ -265,9 +301,11 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
             >
               <img
                 ref={lightboxImageRef}
-                src={activeImage.image_url}
+                src={activeImageLightboxUrl}
                 alt="Wedding memory preview"
                 className="lightbox-image"
+                loading="eager"
+                decoding="async"
                 style={{ transform: `scale(${imageZoom})` }}
               />
             </motion.div>

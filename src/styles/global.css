@@ -1,4 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Great+Vibes&family=Open+Sans:wght@300;400;600;700&display=swap');
+@font-face {
+  font-family: 'Gibs';
+  src: url('/Gibs.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Velana';
+  src: url('/Velana-Oblique.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
 
 :root {
   --primary-pink: #e91e63;
@@ -24,7 +38,7 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Lora', serif;
   color: var(--dark-text);
   background: var(--cream);
   min-height: 100vh;
@@ -36,7 +50,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-weight: 600;
   color: var(--dark-text);
   text-transform: uppercase;
@@ -57,7 +71,7 @@ h3 {
 }
 
 .script-font {
-  font-family: 'Great Vibes', cursive;
+  font-family: 'Gibs', serif;
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
@@ -84,7 +98,7 @@ h3 {
 }
 
 .nav-logo {
-  font-family: 'Great Vibes', cursive;
+  font-family: 'Gibs', serif;
   font-size: 1.8rem;
   color: var(--primary-pink);
   text-decoration: none;
@@ -97,7 +111,7 @@ h3 {
 }
 
 .nav-link {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 0.9rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -125,7 +139,7 @@ h3 {
   background: var(--white);
   box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
   z-index: 1000 !important;
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
   border-top: 1px solid var(--border);
 }
 
@@ -167,7 +181,7 @@ h3 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Lora', serif;
 }
 
 .wedding-app {
@@ -198,6 +212,97 @@ h3 {
   color: var(--light-text);
 }
 
+.skeleton-page {
+  min-height: 100vh;
+}
+
+.skeleton-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.skeleton-block {
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(
+    90deg,
+    rgba(233, 30, 99, 0.08) 0%,
+    rgba(233, 30, 99, 0.18) 50%,
+    rgba(233, 30, 99, 0.08) 100%
+  );
+  background-size: 240% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-title {
+  height: 2.25rem;
+  width: min(18rem, 90%);
+  margin-inline: auto;
+}
+
+.skeleton-line {
+  height: 1rem;
+  width: min(42rem, 100%);
+  margin-inline: auto;
+}
+
+.skeleton-line-medium {
+  width: min(28rem, 95%);
+}
+
+.skeleton-line-short {
+  width: min(24rem, 80%);
+}
+
+.skeleton-hero {
+  height: clamp(180px, 30vw, 320px);
+}
+
+.skeleton-events-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.skeleton-event-card {
+  height: 150px;
+}
+
+.skeleton-map {
+  height: clamp(220px, 36vw, 380px);
+}
+
+.skeleton-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.skeleton-chip {
+  height: 42px;
+  border-radius: 999px;
+}
+
+.skeleton-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+
+.skeleton-gallery-tile {
+  aspect-ratio: 1;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .tab-page {
   width: 100%;
 }
@@ -211,7 +316,400 @@ h3 {
   margin: 0 auto;
 }
 
-/* Opening Screen */
+/* Opening Screen - New Professional Design */
+.opening-overlay-new {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.opening-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  will-change: transform;
+}
+
+/* Sparkles Animation */
+.sparkles-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #ffd700 0%, #ff6b35 50%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Floating Hearts */
+.hearts-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.floating-heart {
+  position: absolute;
+  font-size: 1.5rem;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Wedding Invitation Card */
+.wedding-invitation-card {
+  position: relative;
+  width: min(90vw, 500px);
+  background: linear-gradient(135deg, #fff 0%, #fefefe 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(233, 30, 99, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Decorative Border */
+.card-border {
+  position: absolute;
+  inset: 15px;
+  border: 2px solid transparent;
+  border-radius: 15px;
+  background: linear-gradient(45deg, #e91e63, #ff6b9d, #ffd700, #ff6b35) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.border-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--primary-pink);
+}
+
+.border-top-left {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 15px 0 0 0;
+}
+
+.border-top-right {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+  border-radius: 0 15px 0 0;
+}
+
+.border-bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+  border-radius: 0 0 0 15px;
+}
+
+.border-bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 15px 0;
+}
+
+/* Card Content */
+.card-content {
+  position: relative;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  z-index: 2;
+}
+
+/* Header Ornament */
+.header-ornament {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Invitation Title */
+.invitation-title {
+  font-family: 'Segoe Script', 'Lucida Handwriting', 'Brush Script MT', 'Velana', cursive;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  color: var(--primary-pink);
+  margin: 0 0 1rem 0;
+  line-height: 1.1;
+  text-transform: none;
+  letter-spacing: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Invitation Subtitle */
+.invitation-subtitle {
+  font-family: 'Gibs', serif;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  color: var(--dark-text);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin: 0 0 2rem 0;
+  opacity: 0.8;
+}
+
+/* Decorative Divider */
+.divider {
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--primary-pink) 50%, transparent 100%);
+  margin: 0 auto 2rem;
+  border-radius: 1px;
+}
+
+/* Wedding Rings Animation */
+.rings-animation {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 2rem;
+}
+
+.ring {
+  position: absolute;
+  border: 3px solid;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ring-1 {
+  width: 40px;
+  height: 40px;
+  border-color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.ring-2 {
+  width: 60px;
+  height: 60px;
+  border-color: #e91e63;
+  box-shadow: 0 0 10px rgba(233, 30, 99, 0.3);
+}
+
+/* Love Message */
+.love-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: 'Gibs', serif;
+  font-size: 0.9rem;
+  color: var(--dark-text);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+/* Open Invitation Button */
+.open-invitation-btn {
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+  color: var(--white);
+  font-family: 'Gibs', serif;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 1.25rem 3rem;
+  cursor: pointer;
+  box-shadow: 
+    0 15px 35px rgba(233, 30, 99, 0.3),
+    0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.open-invitation-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.open-invitation-btn:hover::before {
+  left: 100%;
+}
+
+/* Opening Animation */
+.opening-animation {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.opening-text {
+  text-align: center;
+  color: var(--dark-text);
+}
+
+.opening-text h2 {
+  font-family: 'Gibs', serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: var(--primary-pink);
+  margin: 0 0 0.5rem 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.opening-text p {
+  font-family: 'Gibs', serif;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.7;
+}
+
+.loading-hearts {
+  font-size: 1.5rem;
+  display: inline-block;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .opening-overlay-new {
+    gap: 2rem;
+    padding: 1rem;
+  }
+  
+  .wedding-invitation-card {
+    width: 95vw;
+  }
+  
+  .card-content {
+    padding: 2.5rem 2rem;
+  }
+  
+  .header-ornament {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .rings-animation {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
+  }
+  
+  .ring-1 {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .ring-2 {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .open-invitation-btn {
+    padding: 1rem 2.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .floating-heart {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .opening-overlay-new {
+    gap: 1.5rem;
+    padding: 0.5rem;
+  }
+  
+  .wedding-invitation-card {
+    width: 98vw;
+    border-radius: 15px;
+  }
+  
+  .card-border {
+    inset: 10px;
+    border-radius: 10px;
+  }
+  
+  .card-content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .border-corner {
+    width: 15px;
+    height: 15px;
+  }
+  
+  .divider {
+    width: 80px;
+    margin: 0 auto 1.5rem;
+  }
+  
+  .love-message {
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .open-invitation-btn {
+    padding: 0.9rem 2rem;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+  
+  .floating-heart {
+    font-size: 1rem;
+  }
+  
+  .sparkle {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* Original Opening Screen (keeping for fallback) */
 .opening-overlay {
   position: fixed;
   inset: 0;
@@ -348,7 +846,7 @@ h3 {
 }
 
 .inner-title {
-  font-family: 'Great Vibes', cursive;
+  font-family: 'Gibs', serif;
   font-size: 3.5rem;
   color: var(--primary-pink);
   margin: 0 0 0.5rem 0;
@@ -356,7 +854,7 @@ h3 {
 }
 
 .inner-subtitle {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 1rem;
   color: var(--dark-text);
   text-transform: uppercase;
@@ -381,7 +879,7 @@ h3 {
   border-radius: 50px;
   background: var(--white);
   color: var(--primary-pink);
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 1rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -505,7 +1003,7 @@ h3 {
 }
 
 .open-heading {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   color: var(--dark-text);
   font-size: clamp(1.5rem, 4vw, 2rem);
   margin-bottom: 2rem;
@@ -521,7 +1019,7 @@ h3 {
   border-radius: 4px;
   background: var(--primary-pink);
   color: var(--white);
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -556,7 +1054,14 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--white);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 247, 250, 0.78) 0%,
+      rgba(255, 239, 245, 0.7) 45%,
+      rgba(252, 233, 241, 0.72) 100%
+    ),
+    url('/back.JPG.jpeg') center / cover no-repeat;
   overflow: hidden;
   padding: 0;
   margin: 0;
@@ -596,7 +1101,7 @@ h3 {
 }
 
 .save-date-label {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 0.75rem;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -626,7 +1131,7 @@ h3 {
 }
 
 .wedding-date-badge {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 0.9rem;
   color: var(--dark-text);
 }
@@ -693,7 +1198,7 @@ h3 {
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--primary-pink);
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
 }
 
 .countdown-item span {
@@ -704,8 +1209,74 @@ h3 {
   font-weight: 600;
 }
 
-.music-toggle {
-  margin-top: 1rem;
+/* Music Floating Action Button */
+.music-fab {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 999;
+  padding: 0;
+}
+
+.music-fab:hover:not(:disabled) {
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 0 10px 30px rgba(233, 30, 99, 0.5);
+}
+
+.music-fab:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.music-fab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.speaker-icon {
+  width: 28px;
+  height: 28px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 768px) {
+  .music-fab {
+    bottom: 80px;
+    right: 15px;
+    width: 56px;
+    height: 56px;
+  }
+  
+  .speaker-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .music-fab {
+    bottom: 75px;
+    right: 12px;
+    width: 52px;
+    height: 52px;
+  }
+  
+  .speaker-icon {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Couple Section */
@@ -851,8 +1422,8 @@ h3 {
 }
 
 .gallery-title-admin {
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
   cursor: pointer;
 }
 
@@ -863,6 +1434,7 @@ h3 {
   letter-spacing: 2px;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  font-family: 'Gibs', serif;
 }
 
 .gallery-grid {
@@ -985,7 +1557,7 @@ h3 {
 }
 
 .timeline-date {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Lora', serif;
   font-size: 0.9rem;
   color: var(--primary-pink);
   font-weight: 600;
@@ -1108,7 +1680,7 @@ h3 {
   border-radius: 4px;
   background: var(--primary-pink);
   color: var(--white);
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1187,7 +1759,7 @@ h3 {
   border-radius: 8px;
   background: transparent;
   color: var(--primary-pink);
-  font-family: 'Oswald', sans-serif;
+  font-family: 'Gibs', serif;
   font-size: 1rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1536,7 +2108,7 @@ body.lightbox-open .bottom-nav {
 }
 
 .footer-names {
-  font-family: 'Great Vibes', cursive;
+  font-family: 'Gibs', serif;
   font-size: 2rem;
   margin-bottom: 1rem;
   color: var(--primary-pink);
@@ -1588,6 +2160,8 @@ body.lightbox-open .bottom-nav {
   .hero {
     padding: 0;
     min-height: calc(100vh - 50px);
+    background-size: 165% auto;
+    background-position: center 22%;
   }
   
   .hero-content {
@@ -1681,6 +2255,8 @@ body.lightbox-open .bottom-nav {
   .hero {
     padding: 0;
     min-height: calc(100vh - 45px);
+    background-size: 210% auto;
+    background-position: center 20%;
   }
   
   .hero-content {

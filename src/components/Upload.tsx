@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { uploadToCloudinary } from '../utils/cloudinaryClient'
+import { optimizeImageForUpload } from '../utils/imageOptimization'
 import { isSupabaseConfigured, saveGalleryImageUrl, type GalleryImage } from '../utils/supabaseClient'
 
 type UploadProps = {
@@ -12,25 +13,54 @@ function Upload({ onUploadSuccess }: UploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [isOptimizing, setIsOptimizing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [passcode, setPasscode] = useState<string>('')
   const [isPasscodeVerified, setIsPasscodeVerified] = useState<boolean>(false)
+  const selectionVersionRef = useRef(0)
 
   const isConfigured = Boolean(uploadPreset && isSupabaseConfigured && requiredPasscode)
 
-  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
+    const selectionVersion = ++selectionVersionRef.current
     setError(null)
+
+    previewUrls.forEach((url) => URL.revokeObjectURL(url))
 
     if (files.length === 0) {
       setSelectedFiles([])
       setPreviewUrls([])
+      setIsOptimizing(false)
       return
     }
 
-    setSelectedFiles(files)
-    setPreviewUrls(files.map((file) => URL.createObjectURL(file)))
+    setIsOptimizing(true)
+
+    try {
+      const optimizedFiles = await Promise.all(files.map((file) => optimizeImageForUpload(file)))
+
+      if (selectionVersionRef.current !== selectionVersion) {
+        return
+      }
+
+      setSelectedFiles(optimizedFiles)
+      setPreviewUrls(optimizedFiles.map((file) => URL.createObjectURL(file)))
+    } catch {
+      if (selectionVersionRef.current !== selectionVersion) {
+        return
+      }
+
+      setSelectedFiles(files)
+      setPreviewUrls(files.map((file) => URL.createObjectURL(file)))
+      setError('Some images could not be optimized. Uploading original files instead.')
+    } finally {
+      if (selectionVersionRef.current === selectionVersion) {
+        setIsOptimizing(false)
+      }
+      event.target.value = ''
+    }
   }
 
   useEffect(() => {
@@ -43,6 +73,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
     previewUrls.forEach((url) => URL.revokeObjectURL(url))
     setSelectedFiles([])
     setPreviewUrls([])
+    setIsOptimizing(false)
   }
 
   const handleUpload = async () => {
@@ -208,10 +239,11 @@ function Upload({ onUploadSuccess }: UploadProps) {
                     <img key={url} src={url} alt={`Upload preview ${index + 1}`} loading="lazy" />
                   ))}
                 </div>
+                {isOptimizing ? <p>Optimizing photos for faster upload and preview...</p> : null}
                 <button
                   className="primary-btn"
                   onClick={() => void handleUpload()}
-                  disabled={isUploading || selectedFiles.length === 0}
+                  disabled={isUploading || isOptimizing || selectedFiles.length === 0}
                 >
                   {isUploading ? 'Uploading...' : '⬆️ Upload Photos'}
                 </button>

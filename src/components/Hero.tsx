@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { gsap } from 'gsap'
 
@@ -16,8 +16,6 @@ type Countdown = {
   seconds: number
 }
 
-const MUSIC_URL = '/weddingmusic.mp3'
-
 const getCountdown = (targetDate: string): Countdown => {
   const diff = new Date(targetDate).getTime() - Date.now()
 
@@ -32,13 +30,10 @@ const getCountdown = (targetDate: string): Countdown => {
     minutes: Math.floor((seconds % 3600) / 60),
     seconds: seconds % 60,
   }
-}
 
+  }
 function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
   const [countdown, setCountdown] = useState<Countdown>(() => getCountdown(weddingDate))
-  const [isMusicOn, setIsMusicOn] = useState(false)
-  const [isAudioReady, setIsAudioReady] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -50,33 +45,10 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
     }
   }, [weddingDate])
 
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
 
-    const handleCanPlayThrough = () => {
-      setIsAudioReady(true)
-      // Autoplay with sound after audio is fully loaded
-      audio.muted = false
-      audio.play().catch(() => {
-        // Browser blocked autoplay - user can click button instead
-        setIsMusicOn(false)
-      })
-    }
 
-    const handleError = () => {
-      console.error('Error loading audio file')
-      setIsAudioReady(false)
-    }
 
-    audio.addEventListener('canplaythrough', handleCanPlayThrough, { once: true })
-    audio.addEventListener('error', handleError)
 
-    return () => {
-      audio.removeEventListener('canplaythrough', handleCanPlayThrough)
-      audio.removeEventListener('error', handleError)
-    }
-  }, [])
 
   useEffect(() => {
     const petals = gsap.utils.toArray<HTMLElement>('.petal')
@@ -121,35 +93,11 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
     [countdown],
   )
 
-  const toggleMusic = async () => {
-    if (!audioRef.current || !isAudioReady) {
-      return
-    }
 
-    if (isMusicOn) {
-      audioRef.current.pause()
-      setIsMusicOn(false)
-      return
-    }
 
-    try {
-      await audioRef.current.play()
-      setIsMusicOn(true)
-    } catch (error) {
-      console.error('Error playing audio:', error)
-      setIsMusicOn(false)
-    }
-  }
 
   return (
     <section id={sectionId} className="hero section-shell">
-      <audio 
-        ref={audioRef} 
-        src={MUSIC_URL} 
-        loop 
-        preload="auto"
-        crossOrigin="anonymous"
-      />
 
       <div className="petal-wrap" aria-hidden="true">
         {petals.map((petal) => (
@@ -211,14 +159,6 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
           ))}
         </div>
 
-        <button 
-          className="music-toggle" 
-          onClick={() => void toggleMusic()}
-          disabled={!isAudioReady}
-          title={isAudioReady ? 'Toggle music' : 'Loading audio...'}
-        >
-          {!isAudioReady ? '⏳ Loading...' : isMusicOn ? '🔊 Music On' : '🔇 Music Off'}
-        </button>
       </div>
     </section>
   )
