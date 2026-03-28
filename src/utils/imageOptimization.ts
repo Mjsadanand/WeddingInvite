@@ -1,5 +1,6 @@
 const DEFAULT_MAX_SIDE = 1920
 const DEFAULT_MAX_OUTPUT_BYTES = 1_500_000
+const DEFAULT_MIN_OPTIMIZE_BYTES = 4 * 1024 * 1024
 const DEFAULT_START_QUALITY = 0.86
 const DEFAULT_MIN_QUALITY = 0.54
 const DEFAULT_QUALITY_STEP = 0.08
@@ -90,8 +91,9 @@ export async function optimizeImageForUpload(file: File, options: OptimizationOp
 
   const maxSide = options.maxSide ?? DEFAULT_MAX_SIDE
   const maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES
+  const minOptimizeBytes = Math.max(maxOutputBytes, DEFAULT_MIN_OPTIMIZE_BYTES)
 
-  if (file.size <= maxOutputBytes) {
+  if (file.size <= minOptimizeBytes) {
     return file
   }
 

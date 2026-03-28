@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { getGalleryThumbUrl, getLightboxUrl } from '../utils/cloudinaryClient'
 import type { GalleryImage } from '../utils/supabaseClient'
 
@@ -220,6 +221,14 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
     })
   }, [activeIndex, images])
 
+  useEffect(() => {
+    if (!lightboxImageRef.current) {
+      return
+    }
+
+    lightboxImageRef.current.style.transform = `scale(${imageZoom})`
+  }, [imageZoom, activeImageLightboxUrl])
+
   if (isLoading) {
     return <p className="gallery-info">Loading gallery...</p>
   }
@@ -275,67 +284,71 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
         ))}
       </div>
 
-      <AnimatePresence>
-        {activeImage ? (
-          <motion.div
-            className="lightbox-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeViewer}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <button type="button" className="lightbox-close" onClick={closeViewer} aria-label="Close preview">
-              ×
-            </button>
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <AnimatePresence>
+              {activeImage ? (
+                <motion.div
+                  className="lightbox-overlay"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={closeViewer}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <button type="button" className="lightbox-close" onClick={closeViewer} aria-label="Close preview">
+                    ×
+                  </button>
 
-            <motion.div
-              className="lightbox-content"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <img
-                ref={lightboxImageRef}
-                src={activeImageLightboxUrl}
-                alt="Wedding memory preview"
-                className="lightbox-image"
-                loading="eager"
-                decoding="async"
-                style={{ transform: `scale(${imageZoom})` }}
-              />
-            </motion.div>
+                  <motion.div
+                    className="lightbox-content"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <img
+                      ref={lightboxImageRef}
+                      src={activeImageLightboxUrl}
+                      alt="Wedding memory preview"
+                      className="lightbox-image"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </motion.div>
 
-            {images.length > 1 ? (
-              <div className="lightbox-counter">
-                {(activeIndex ?? 0) + 1} / {images.length}
-              </div>
-            ) : null}
+                  {images.length > 1 ? (
+                    <div className="lightbox-counter">
+                      {(activeIndex ?? 0) + 1} / {images.length}
+                    </div>
+                  ) : null}
 
-            {canDelete ? (
-              <button
-                type="button"
-                className="lightbox-delete-btn"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  if (!activeImage) {
-                    return
-                  }
-                  onDeleteImage(activeImage.id)
-                  closeViewer()
-                }}
-                disabled={activeImage ? deletingImageId === activeImage.id : false}
-              >
-                {activeImage && deletingImageId === activeImage.id ? 'Deleting...' : 'Delete Photo'}
-              </button>
-            ) : null}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+                  {canDelete ? (
+                    <button
+                      type="button"
+                      className="lightbox-delete-btn"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (!activeImage) {
+                          return
+                        }
+                        onDeleteImage(activeImage.id)
+                        closeViewer()
+                      }}
+                      disabled={activeImage ? deletingImageId === activeImage.id : false}
+                    >
+                      {activeImage && deletingImageId === activeImage.id ? 'Deleting...' : 'Delete Photo'}
+                    </button>
+                  ) : null}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>,
+            document.body,
+          )
+        : null}
     </>
   )
 }
