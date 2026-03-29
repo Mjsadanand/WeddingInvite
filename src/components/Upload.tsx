@@ -5,9 +5,10 @@ import { isSupabaseConfigured, saveGalleryImageUrl, type GalleryImage } from '..
 
 type UploadProps = {
   onUploadSuccess: (image: GalleryImage) => void
+  language: 'en' | 'kn'
 }
 
-function Upload({ onUploadSuccess }: UploadProps) {
+function Upload({ onUploadSuccess, language }: UploadProps) {
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
   const requiredPasscode = import.meta.env.VITE_UPLOAD_PASSCODE as string | undefined
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -125,7 +126,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
       setIsPasscodeVerified(true)
       setError(null)
     } else {
-      setError('Invalid passcode. Please try again.')
+      setError(language === 'kn' ? 'ತಪ್ಪಾದ ಪಾಸ್‌ಕೋಡ್. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.' : 'Invalid passcode. Please try again.')
       setPasscode('')
     }
   }
@@ -161,7 +162,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
             <polyline points="17 8 12 3 7 8" strokeLinecap="round" strokeLinejoin="round" />
             <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Upload My Pics
+          {language === 'kn' ? 'ನನ್ನ ಫೋಟೋಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ' : 'Upload My Pics'}
         </button>
       ) : null}
 
@@ -172,17 +173,21 @@ function Upload({ onUploadSuccess }: UploadProps) {
               ×
             </button>
 
-            <h3>Upload Your Photos</h3>
-            <p>Share your favorite moments from the celebration</p>
+            <h3>{language === 'kn' ? 'ನಿಮ್ಮ ಫೋಟೋಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ' : 'Upload Your Photos'}</h3>
+            <p>
+              {language === 'kn'
+                ? 'ಕಾರ್ಯಕ್ರಮದ ನಿಮ್ಮ ಮೆಚ್ಚಿನ ಕ್ಷಣಗಳನ್ನು ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ'
+                : 'Share your favorite moments from the celebration'}
+            </p>
 
             {!isPasscodeVerified ? (
               <div className="preview-card">
-                <p>Enter passcode to continue</p>
+                <p>{language === 'kn' ? 'ಮುಂದುವರಿಸಲು ಪಾಸ್‌ಕೋಡ್ ನಮೂದಿಸಿ' : 'Enter passcode to continue'}</p>
                 <input
                   type="password"
                   value={passcode}
                   onChange={(event) => setPasscode(event.target.value)}
-                  placeholder="Enter upload passcode"
+                  placeholder={language === 'kn' ? 'ಅಪ್ಲೋಡ್ ಪಾಸ್‌ಕೋಡ್ ನಮೂದಿಸಿ' : 'Enter upload passcode'}
                   className="upload-passcode-input"
                 />
                 <button
@@ -190,7 +195,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
                   onClick={handlePasscodeSubmit}
                   disabled={!passcode.trim()}
                 >
-                  Unlock Upload
+                  {language === 'kn' ? 'ಅಪ್ಲೋಡ್ ಅನ್ಲಾಕ್ ಮಾಡಿ' : 'Unlock Upload'}
                 </button>
               </div>
             ) : (
@@ -200,7 +205,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                     <circle cx="12" cy="13" r="4" />
                   </svg>
-                  Click Selfie
+                  {language === 'kn' ? 'ಸೆಲ್ಫಿ ಕ್ಲಿಕ್ ಮಾಡಿ' : 'Click Selfie'}
                 </label>
                 <input
                   id="camera-upload"
@@ -218,7 +223,7 @@ function Upload({ onUploadSuccess }: UploadProps) {
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
-                  Choose Photo
+                  {language === 'kn' ? 'ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ' : 'Choose Photo'}
                 </label>
                 <input
                   id="gallery-upload"
@@ -233,19 +238,35 @@ function Upload({ onUploadSuccess }: UploadProps) {
 
             {previewUrls.length > 0 ? (
               <div className="preview-card">
-                <p>Selected {selectedFiles.length} photo(s)</p>
+                <p>
+                  {language === 'kn'
+                    ? `${selectedFiles.length} ಫೋಟೋ ಆಯ್ಕೆಯಾಗಿದೆ`
+                    : `Selected ${selectedFiles.length} photo(s)`}
+                </p>
                 <div className="preview-grid">
                   {previewUrls.map((url, index) => (
                     <img key={url} src={url} alt={`Upload preview ${index + 1}`} loading="lazy" />
                   ))}
                 </div>
-                {isOptimizing ? <p>Optimizing photos for faster upload and preview...</p> : null}
+                {isOptimizing ? (
+                  <p>
+                    {language === 'kn'
+                      ? 'ವೇಗವಾದ ಅಪ್ಲೋಡ್ ಮತ್ತು ಪ್ರಿವ್ಯೂಗಾಗಿ ಫೋಟೋಗಳನ್ನು ಆಪ್ಟಿಮೈಸ್ ಮಾಡಲಾಗುತ್ತಿದೆ...'
+                      : 'Optimizing photos for faster upload and preview...'}
+                  </p>
+                ) : null}
                 <button
                   className="primary-btn"
                   onClick={() => void handleUpload()}
                   disabled={isUploading || isOptimizing || selectedFiles.length === 0}
                 >
-                  {isUploading ? 'Uploading...' : '⬆️ Upload Photos'}
+                  {isUploading
+                    ? language === 'kn'
+                      ? 'ಅಪ್ಲೋಡ್ ಆಗುತ್ತಿದೆ...'
+                      : 'Uploading...'
+                    : language === 'kn'
+                      ? '⬆️ ಫೋಟೋಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ'
+                      : '⬆️ Upload Photos'}
                 </button>
               </div>
             ) : null}

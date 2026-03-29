@@ -10,9 +10,10 @@ type GalleryProps = {
   canDelete: boolean
   deletingImageId: string | null
   onDeleteImage: (imageId: string) => void
+  language: 'en' | 'kn'
 }
 
-function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage }: GalleryProps) {
+function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage, language }: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const [imageZoom, setImageZoom] = useState(1)
   const touchStartX = useRef<number>(0)
@@ -230,11 +231,17 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
   }, [imageZoom, activeImageLightboxUrl])
 
   if (isLoading) {
-    return <p className="gallery-info">Loading gallery...</p>
+    return <p className="gallery-info">{language === 'kn' ? 'ಗ್ಯಾಲರಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ...' : 'Loading gallery...'}</p>
   }
 
   if (images.length === 0) {
-    return <p className="gallery-info">No images uploaded yet. Be the first to share a memory.</p>
+    return (
+      <p className="gallery-info">
+        {language === 'kn'
+          ? 'ಇನ್ನೂ ಫೋಟೋಗಳನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿಲ್ಲ. ಮೊದಲ ನೆನಪನ್ನು ನೀವು ಹಂಚಿಕೊಳ್ಳಿ.'
+          : 'No images uploaded yet. Be the first to share a memory.'}
+      </p>
+    )
   }
 
   return (
@@ -261,7 +268,7 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
                 aria-label="Delete image"
                 title="Delete photo"
               >
-                {deletingImageId === image.id ? 'Deleting...' : 'Delete'}
+                {deletingImageId === image.id ? (language === 'kn' ? 'ಅಳಿಸಲಾಗುತ್ತಿದೆ...' : 'Deleting...') : language === 'kn' ? 'ಅಳಿಸಿ' : 'Delete'}
               </button>
             ) : null}
 
@@ -340,7 +347,13 @@ function Gallery({ images, isLoading, canDelete, deletingImageId, onDeleteImage 
                       }}
                       disabled={activeImage ? deletingImageId === activeImage.id : false}
                     >
-                      {activeImage && deletingImageId === activeImage.id ? 'Deleting...' : 'Delete Photo'}
+                      {activeImage && deletingImageId === activeImage.id
+                        ? language === 'kn'
+                          ? 'ಅಳಿಸಲಾಗುತ್ತಿದೆ...'
+                          : 'Deleting...'
+                        : language === 'kn'
+                          ? 'ಫೋಟೋ ಅಳಿಸಿ'
+                          : 'Delete Photo'}
                     </button>
                   ) : null}
                 </motion.div>

@@ -33,13 +33,16 @@ gsap.registerPlugin(ScrollTrigger)
 
 const WEDDING_DATE = '2026-04-13T12:38:00+05:30'
 const INVITE_OPENED_STORAGE_KEY = 'wedding_invite_opened'
+const LANGUAGE_STORAGE_KEY = 'wedding_language'
 const DESTINATION = {
-  name: 'Gurubhavan Kalyan Mantapa, Municipal Ground Road, Haveri',
+  nameEn: 'Gurubhavan Kalyan Mantapa, Municipal Ground Road, Haveri',
+  nameKn: 'ಗುರುಭವನ ಕಲ್ಯಾಣ ಮಂಟಪ, ಮ್ಯೂನಿಸಿಪಲ್ ಗ್ರೌಂಡ್ ರಸ್ತೆ, ಹಾವೇರಿ',
   lat: 14.795,
   lng: 75.399,
 }
 
 type TabKey = 'home' | 'location' | 'gallery'
+type Language = 'en' | 'kn'
 type IconComponent = (props: SVGProps<SVGSVGElement>) => ReactElement
 
 type SkeletonBlockProps = {
@@ -161,12 +164,44 @@ function App() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [adminPasscodeInput, setAdminPasscodeInput] = useState('')
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
-    const [isMusicOn, setIsMusicOn] = useState(false)
-    const [isAudioReady, setIsAudioReady] = useState(false)
+  const [isMusicOn, setIsMusicOn] = useState(false)
+  const [isAudioReady, setIsAudioReady] = useState(false)
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === 'undefined') {
+      return 'kn'
+    }
+
+    const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY)
+    return savedLanguage === 'en' ? 'en' : 'kn'
+  })
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
   const adminLongPressTimerRef = useRef<number | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const hasTriedAutoplayRef = useRef(false)
+
+  const attemptAutoplay = useCallback(async () => {
+    const audio = audioRef.current
+    if (!audio) {
+      return
+    }
+
+    try {
+      audio.muted = false
+      await audio.play()
+      setIsMusicOn(true)
+    } catch {
+      setIsMusicOn(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language)
+  }, [language])
 
   const loadImages = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -360,10 +395,11 @@ function App() {
 
     const handleCanPlayThrough = () => {
       setIsAudioReady(true)
-      audio.muted = false
-      audio.play().catch(() => {
-        setIsMusicOn(false)
-      })
+
+      if (isInviteOpen && !hasTriedAutoplayRef.current) {
+        hasTriedAutoplayRef.current = true
+        void attemptAutoplay()
+      }
     }
 
     const handleError = () => {
@@ -378,7 +414,7 @@ function App() {
       audio.removeEventListener('canplaythrough', handleCanPlayThrough)
       audio.removeEventListener('error', handleError)
     }
-  }, [])
+  }, [attemptAutoplay, isInviteOpen])
 
   const toggleMusic = useCallback(async () => {
     if (!audioRef.current || !isAudioReady) return
@@ -401,13 +437,27 @@ function App() {
   const handleOpenComplete = useCallback(() => {
     setIsInviteOpen(true)
     window.localStorage.setItem(INVITE_OPENED_STORAGE_KEY, 'true')
-  }, [])
+
+    if (!hasTriedAutoplayRef.current) {
+      hasTriedAutoplayRef.current = true
+      void attemptAutoplay()
+    }
+  }, [attemptAutoplay])
 
   const shareLink = useMemo(() => {
-    const venue = `${DESTINATION.name} (${DESTINATION.lat}, ${DESTINATION.lng})`
-    const message = `With the blessings of elders, we invite you to celebrate the wedding of Mr. Dayanand M and Ms. Shweta (Neha).\nDate: 13 April 2026, Muhurta around 12:38 PM\nReception: 12 April 2026, around 7:30 PM\nVenue: ${venue}\n${window.location.href}`
+    const venueName = language === 'kn' ? DESTINATION.nameKn : DESTINATION.nameEn
+    const venue = `${venueName} (${DESTINATION.lat}, ${DESTINATION.lng})`
+    const message =
+      language === 'kn'
+        ? `ಹಿರಿಯರ ಆಶೀರ್ವಾದದಿಂದ, ಶ್ರೀ ದಯಾನಂದ ಎಂ ಮತ್ತು ಶ್ರೀಮತಿ ಶ್ವೇತಾ (ನೇಹಾ) ಅವರ ವಿವಾಹಕ್ಕೆ ಆತ್ಮೀಯ ಆಹ್ವಾನ.\nದಿನಾಂಕ: 13 ಏಪ್ರಿಲ್ 2026, ಮುಹೂರ್ತ ಸುಮಾರು ಮಧ್ಯಾಹ್ನ 12:38\nರಿಸೆಪ್ಷನ್: 12 ಏಪ್ರಿಲ್ 2026, ಸಂಜೆ ಸುಮಾರು 7:30\nಸ್ಥಳ: ${venue}\n${window.location.href}`
+        : `With the blessings of elders, we invite you to celebrate the wedding of Mr. Dayanand M and Ms. Shweta (Neha).\nDate: 13 April 2026, Muhurta around 12:38 PM\nReception: 12 April 2026, around 7:30 PM\nVenue: ${venue}\n${window.location.href}`
     return `https://wa.me/?text=${encodeURIComponent(message)}`
-  }, [])
+  }, [language])
+
+  const languageFabLabel = language === 'kn' ? 'ಭಾಷೆ: ಕನ್ನಡ' : 'Language: English'
+  const brideName = language === 'kn' ? 'ಶ್ವೇತಾ (ನೇಹಾ)' : 'Shweta (Neha)'
+  const groomName = language === 'kn' ? 'ದಯಾನಂದ ಎಂ' : 'Dayanand M'
+  const venueName = language === 'kn' ? DESTINATION.nameKn : DESTINATION.nameEn
 
   const tabs: Array<{ key: TabKey; label: string; icon: IconComponent }> = [
     { key: 'home', label: 'Home', icon: HomeIcon },
@@ -489,28 +539,33 @@ function App() {
                 <Hero
                   sectionId="hero"
                   weddingDate={WEDDING_DATE}
-                  brideName="Shweta (Neha)"
-                  groomName="Dayanand M"
+                  brideName={brideName}
+                  groomName={groomName}
+                  language={language}
                 />
 
                 <section id="timeline" className="section-shell timeline-section">
                   <div className="section-container">
-                    <Timeline />
+                    <Timeline language={language} />
                   </div>
                 </section>
 
                 <section id="events" className="section-shell events-section">
                   <div className="section-container">
-                    <Events />
+                    <Events language={language} />
                   </div>
                 </section>
 
                 <section className="section-shell share-panel">
                   <div className="section-container">
                     <h3>Share The Invitation</h3>
-                    <p>Send this wedding invite to your loved ones on WhatsApp.</p>
+                    <p>
+                      {language === 'kn'
+                        ? 'ಈ ವಿವಾಹ ಆಹ್ವಾನವನ್ನು ನಿಮ್ಮ ಕುಟುಂಬದವರು ಮತ್ತು ಸ್ನೇಹಿತರೊಂದಿಗೆ WhatsApp ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ.'
+                        : 'Send this wedding invite to your loved ones on WhatsApp.'}
+                    </p>
                     <a className="primary-btn whatsapp-btn" href={shareLink} target="_blank" rel="noreferrer">
-                      Share on WhatsApp
+                      {language === 'kn' ? 'WhatsApp ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ' : 'Share on WhatsApp'}
                     </a>
                   </div>
                 </section>
@@ -531,9 +586,10 @@ function App() {
                     <Location
                       weddingDate="13 April 2026"
                       weddingTime="Muhurta around 12:38 PM"
-                      venueName={DESTINATION.name}
+                      venueName={venueName}
                       lat={DESTINATION.lat}
                       lng={DESTINATION.lng}
+                      language={language}
                     />
                   </div>
                 </section>
@@ -564,7 +620,11 @@ function App() {
                       >
                         Captured Moments
                       </h2>
-                      <p className="gallery-subtitle">Share your favorite moments from the celebration</p>
+                      <p className="gallery-subtitle">
+                        {language === 'kn'
+                          ? 'ಕಾರ್ಯಕ್ರಮದ ನಿಮ್ಮ ಮೆಚ್ಚಿನ ಕ್ಷಣಗಳನ್ನು ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ'
+                          : 'Share your favorite moments from the celebration'}
+                      </p>
                     </div>
 
                     {galleryError ? <p className="gallery-error">{galleryError}</p> : null}
@@ -577,9 +637,11 @@ function App() {
                       canDelete={isDeleteEnabled}
                       deletingImageId={deletingImageId}
                       onDeleteImage={handleDeleteImage}
+                      language={language}
                     />
 
                     <Upload
+                      language={language}
                       onUploadSuccess={(newImage) => {
                         setImages((previous) => [newImage, ...previous])
                       }}
@@ -630,33 +692,45 @@ function App() {
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
       {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}
 
-        {/* Audio Element for Background Music */}
-        <audio ref={audioRef} src="/weddingmusic.mp3" loop preload="auto" crossOrigin="anonymous" />
+      {isInviteOpen ? (
+        <button
+          className={`language-fab ${activeTab === 'home' ? 'above-music' : ''}`}
+          onClick={() => setLanguage((previous) => (previous === 'en' ? 'kn' : 'en'))}
+          title={language === 'kn' ? 'Switch to English' : 'ಕನ್ನಡಕ್ಕೆ ಬದಲಿಸಿ'}
+          aria-label={language === 'kn' ? 'Switch language to English' : 'Switch language to Kannada'}
+        >
+          <span className="language-fab-code">{language === 'kn' ? 'EN' : 'ಕನ್ನಡ'}</span>
+          <span className="language-fab-label">{languageFabLabel}</span>
+        </button>
+      ) : null}
 
-        {/* Music FAB Button - Global Control */}
-        {isInviteOpen && activeTab === 'home' ? (
-          <button
-            className="music-fab"
-            onClick={() => void toggleMusic()}
-            disabled={!isAudioReady}
-            title={isMusicOn ? 'Mute Music' : 'Play Music'}
-          >
-            <svg className="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {isMusicOn ? (
-                <>
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M15.5 8.5a4 4 0 0 1 0 7M19 4a8 8 0 0 1 0 16" strokeLinecap="round" strokeLinejoin="round" />
-                </>
-              ) : (
-                <>
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="23" y1="9" x2="17" y2="15" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="17" y1="9" x2="23" y2="15" strokeLinecap="round" strokeLinejoin="round" />
-                </>
-              )}
-            </svg>
-          </button>
-        ) : null}
+      {/* Audio Element for Background Music */}
+      <audio ref={audioRef} src="/weddingmusic.mp3" autoPlay loop preload="auto" crossOrigin="anonymous" />
+
+      {/* Music FAB Button - Global Control */}
+      {isInviteOpen && activeTab === 'home' ? (
+        <button
+          className="music-fab"
+          onClick={() => void toggleMusic()}
+          disabled={!isAudioReady}
+          title={isMusicOn ? 'Mute Music' : 'Play Music'}
+        >
+          <svg className="speaker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {isMusicOn ? (
+              <>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M15.5 8.5a4 4 0 0 1 0 7M19 4a8 8 0 0 1 0 16" strokeLinecap="round" strokeLinejoin="round" />
+              </>
+            ) : (
+              <>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="17" y1="9" x2="23" y2="15" strokeLinecap="round" strokeLinejoin="round" />
+              </>
+            )}
+          </svg>
+        </button>
+      ) : null}
     </>
   )
 }

@@ -7,6 +7,7 @@ type LocationProps = {
   venueName: string
   lat: number
   lng: number
+  language: 'en' | 'kn'
 }
 
 function NavigationIcon(props: SVGProps<SVGSVGElement>) {
@@ -31,7 +32,7 @@ function PhoneIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-function Location({ venueName, lat, lng }: LocationProps) {
+function Location({ venueName, lat, lng, language }: LocationProps) {
   const contactNumbers = ['8310861235', '7829118313', '8553393038']
 
   const handleDirections = () => {
@@ -78,14 +79,18 @@ function Location({ venueName, lat, lng }: LocationProps) {
         />
       </div>
 
-      <p className="helper-text">Tap to navigate directly from your location</p>
+      <p className="helper-text">
+        {language === 'kn'
+          ? 'ನಿಮ್ಮ ಇಂದಿನ ಸ್ಥಳದಿಂದ ನೇರವಾಗಿ ದಾರಿ ನೋಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ'
+          : 'Tap to navigate directly from your location'}
+      </p>
       <button className="primary-btn direction-btn" onClick={handleDirections}>
         <NavigationIcon style={{ width: '20px', height: '20px' }} />
         Get Directions
       </button>
 
       <section className="contact-panel" aria-label="Family contacts">
-        <h3>Call Family</h3>
+        <h3>{language === 'kn' ? 'ಕುಟುಂಬವನ್ನು ಸಂಪರ್ಕಿಸಿ' : 'Call Family'}</h3>
         <div className="contact-grid">
           {contactNumbers.map((number) => (
             <a key={number} className="contact-btn" href={`tel:${number}`}>

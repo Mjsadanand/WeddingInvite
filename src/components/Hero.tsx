@@ -7,6 +7,7 @@ type HeroProps = {
   weddingDate: string
   brideName: string
   groomName: string
+  language: 'en' | 'kn'
 }
 
 type Countdown = {
@@ -32,7 +33,7 @@ const getCountdown = (targetDate: string): Countdown => {
   }
 
   }
-function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
+function Hero({ sectionId, weddingDate, brideName, groomName, language }: HeroProps) {
   const [countdown, setCountdown] = useState<Countdown>(() => getCountdown(weddingDate))
 
   useEffect(() => {
@@ -85,12 +86,12 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
 
   const countdownItems = useMemo(
     () => [
-      { label: 'Days', value: countdown.days },
-      { label: 'Hours', value: countdown.hours },
-      { label: 'Minutes', value: countdown.minutes },
-      { label: 'Seconds', value: countdown.seconds },
+      { label: language === 'kn' ? 'ದಿನ' : 'Days', value: countdown.days },
+      { label: language === 'kn' ? 'ಗಂಟೆ' : 'Hours', value: countdown.hours },
+      { label: language === 'kn' ? 'ನಿಮಿಷ' : 'Minutes', value: countdown.minutes },
+      { label: language === 'kn' ? 'ಕ್ಷಣ' : 'Seconds', value: countdown.seconds },
     ],
-    [countdown],
+    [countdown, language],
   )
 
 
@@ -140,7 +141,9 @@ function Hero({ sectionId, weddingDate, brideName, groomName }: HeroProps) {
           viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.3 }}
         >
-          Join us as two hearts become one in a celebration of love, tradition, and forever.
+          {language === 'kn'
+            ? 'ಪ್ರೇಮ, ಪರಂಪರೆ ಮತ್ತು ಶಾಶ್ವತ ಬಂಧದ ಈ ವಿಶೇಷ ಕ್ಷಣದಲ್ಲಿ ನಮ್ಮೊಂದಿಗಿರಿ.'
+            : 'Join us as two hearts become one in a celebration of love, tradition, and forever.'}
         </motion.p>
 
         <div className="countdown-grid">
