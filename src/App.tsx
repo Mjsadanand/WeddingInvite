@@ -9,6 +9,7 @@ import {
   type ReactElement,
   type SVGProps,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -657,42 +658,45 @@ function App() {
         {/* Bottom Navigation for Mobile/Tablet */}
       </div>
 
-      {isAdminModalOpen ? (
-        <div className="admin-modal-overlay" onClick={closeAdminModal}>
-          <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
-            <button className="modal-close" onClick={closeAdminModal}>
-              ×
-            </button>
+      {isAdminModalOpen && typeof document !== 'undefined'
+        ? createPortal(
+            <div className="admin-modal-overlay" onClick={closeAdminModal}>
+              <div className="admin-modal" onClick={(event) => event.stopPropagation()}>
+                <button className="modal-close" onClick={closeAdminModal}>
+                  ×
+                </button>
 
-            <h3>Admin Access</h3>
-            <p>Enter passcode to enable delete options</p>
+                <h3>Admin Access</h3>
+                <p>Enter passcode to enable delete options</p>
 
-            <div className="preview-card">
-              <input
-                type="password"
-                value={adminPasscodeInput}
-                onChange={(event) => setAdminPasscodeInput(event.target.value)}
-                placeholder="Enter admin passcode"
-                className="upload-passcode-input"
-                autoFocus
-              />
+                <div className="preview-card">
+                  <input
+                    type="password"
+                    value={adminPasscodeInput}
+                    onChange={(event) => setAdminPasscodeInput(event.target.value)}
+                    placeholder="Enter admin passcode"
+                    className="upload-passcode-input"
+                    autoFocus
+                  />
 
-              <button
-                className="primary-btn"
-                onClick={submitAdminPasscode}
-                disabled={!adminPasscodeInput.trim()}
-              >
-                Enable Delete Mode
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+                  <button
+                    className="primary-btn"
+                    onClick={submitAdminPasscode}
+                    disabled={!adminPasscodeInput.trim()}
+                  >
+                    Enable Delete Mode
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
       {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}
 
-      {isInviteOpen ? (
+      {isInviteOpen && activeTab !== 'gallery' ? (
         <button
           className={`language-fab ${activeTab === 'home' ? 'above-music' : ''}`}
           onClick={() => setLanguage((previous) => (previous === 'en' ? 'kn' : 'en'))}
