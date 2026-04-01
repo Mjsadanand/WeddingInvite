@@ -32,23 +32,38 @@ function PhoneIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
-function Location({ venueName, lat, lng, language }: LocationProps) {
+function Location({ venueName, language }: LocationProps) {
   const contactNumbers = ['8310861235', '7829118313', '8553393038']
+  const destinationLat = 14.793333
+  const destinationLng = 75.399444
+
+  const openDirections = (origin?: { latitude: number; longitude: number }) => {
+    const baseUrl = 'https://www.google.com/maps/dir/?api=1'
+    const destination = `&destination=${destinationLat},${destinationLng}`
+
+    if (origin) {
+      const originParam = `&origin=${origin.latitude},${origin.longitude}`
+      window.open(`${baseUrl}${originParam}${destination}`, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    // Let Google Maps resolve to the user's current location when exact coordinates are unavailable.
+    window.open(`${baseUrl}&origin=Current+Location${destination}`, '_blank', 'noopener,noreferrer')
+  }
 
   const handleDirections = () => {
     if (!navigator.geolocation) {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank', 'noopener,noreferrer')
+      openDirections()
       return
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${lat},${lng}`
-        window.open(url, '_blank', 'noopener,noreferrer')
+        openDirections({ latitude, longitude })
       },
       () => {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank', 'noopener,noreferrer')
+        openDirections()
       },
       { enableHighAccuracy: true, timeout: 8000 },
     )
@@ -74,7 +89,8 @@ function Location({ venueName, lat, lng, language }: LocationProps) {
       <div className="map-frame">
         <iframe
           title="Wedding Venue Map"
-          src={`https://maps.google.com/maps?q=${lat},${lng}&z=14&output=embed`}
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3490.898062913244!2d75.39950255!3d14.793350100000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb968e2ccc84825%3A0xd364fae0dc311052!2sGuru%20Bhavan%2C%20Vidya%20Nagar%2C%20Haveri%2C%20Karnataka%20581110!5e1!3m2!1sen!2sin!4v1775018084827!5m2!1sen!2sin"
+          allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
