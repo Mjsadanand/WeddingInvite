@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
+
 @font-face {
   font-family: 'Gibs';
   src: url('/Gibs.otf') format('opentype');
@@ -11,8 +13,6 @@
   font-weight: 400;
   font-style: italic;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap');
 
 :root {
   --primary-pink: #e91e63;

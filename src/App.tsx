@@ -13,7 +13,6 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import OpeningScreen from './components/OpeningScreen'
 import BottomNav from './components/BottomNav'
 import {
   deleteGalleryImage,
@@ -33,7 +32,6 @@ const Gallery = lazy(() => import('./components/Gallery'))
 gsap.registerPlugin(ScrollTrigger)
 
 const WEDDING_DATE = '2026-04-13T12:38:00+05:30'
-const INVITE_OPENED_STORAGE_KEY = 'wedding_invite_opened'
 const LANGUAGE_STORAGE_KEY = 'wedding_language'
 const DESTINATION = {
   nameEn: 'Gurubhavan Kalyan Mantapa, Municipal Ground Road, Haveri',
@@ -149,13 +147,6 @@ function GalleryIcon(props: SVGProps<SVGSVGElement>) {
 
 function App() {
   const deletePasscode = import.meta.env.VITE_DELETE_PASSCODE as string | undefined
-  const [isInviteOpen, setIsInviteOpen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    return window.localStorage.getItem(INVITE_OPENED_STORAGE_KEY) === 'true'
-  })
   const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [images, setImages] = useState<GalleryImage[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(true)
@@ -320,10 +311,6 @@ function App() {
   }, [isDeleteEnabled, loadImages])
 
   useEffect(() => {
-    if (!isInviteOpen) {
-      return undefined
-    }
-
     const sections = gsap.utils.toArray<HTMLElement>('.section-shell')
     const animations = sections.map((section) =>
       gsap.fromTo(
@@ -361,7 +348,7 @@ function App() {
       parallaxTweens.forEach((tween) => tween.kill())
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill())
     }
-  }, [activeTab, isInviteOpen])
+  }, [activeTab])
 
   useEffect(() => {
     return () => {
@@ -397,7 +384,7 @@ function App() {
     const handleCanPlayThrough = () => {
       setIsAudioReady(true)
 
-      if (isInviteOpen && !hasTriedAutoplayRef.current) {
+      if (!hasTriedAutoplayRef.current) {
         hasTriedAutoplayRef.current = true
         void attemptAutoplay()
       }
@@ -415,7 +402,7 @@ function App() {
       audio.removeEventListener('canplaythrough', handleCanPlayThrough)
       audio.removeEventListener('error', handleError)
     }
-  }, [attemptAutoplay, isInviteOpen])
+  }, [attemptAutoplay])
 
   const toggleMusic = useCallback(async () => {
     if (!audioRef.current || !isAudioReady) return
@@ -434,16 +421,6 @@ function App() {
       setIsMusicOn(false)
     }
   }, [isMusicOn, isAudioReady])
-
-  const handleOpenComplete = useCallback(() => {
-    setIsInviteOpen(true)
-    window.localStorage.setItem(INVITE_OPENED_STORAGE_KEY, 'true')
-
-    if (!hasTriedAutoplayRef.current) {
-      hasTriedAutoplayRef.current = true
-      void attemptAutoplay()
-    }
-  }, [attemptAutoplay])
 
   const shareLink = useMemo(() => {
     const venueName = language === 'kn' ? DESTINATION.nameKn : DESTINATION.nameEn
@@ -504,9 +481,7 @@ function App() {
 
   return (
     <>
-      {!isInviteOpen ? <OpeningScreen onOpenComplete={handleOpenComplete} /> : null}
-
-      <div className={`wedding-app ${isInviteOpen ? 'show-content' : 'hide-content'}`}>
+      <div className="wedding-app show-content">
         {/* Top Navigation */}
         <nav className="top-nav">
           <div className="nav-container">
@@ -694,9 +669,9 @@ function App() {
         : null}
 
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
-      {isInviteOpen ? <BottomNav activeTab={activeTab} onTabChange={setActiveTab} /> : null}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {isInviteOpen && activeTab !== 'gallery' ? (
+      {activeTab !== 'gallery' ? (
         <button
           className={`language-fab ${activeTab === 'home' ? 'above-music' : ''}`}
           onClick={() => setLanguage((previous) => (previous === 'en' ? 'kn' : 'en'))}
@@ -712,7 +687,7 @@ function App() {
       <audio ref={audioRef} src="/weddingmusic.mp3" autoPlay loop preload="auto" crossOrigin="anonymous" />
 
       {/* Music FAB Button - Global Control */}
-      {isInviteOpen && activeTab === 'home' ? (
+      {activeTab === 'home' ? (
         <button
           className="music-fab"
           onClick={() => void toggleMusic()}
