@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import BottomNav from './components/BottomNav'
+import PasscodeGate from './components/PasscodeGate'
 import {
   deleteGalleryImage,
   fetchWeddingImages,
@@ -147,6 +148,7 @@ function GalleryIcon(props: SVGProps<SVGSVGElement>) {
 
 function App() {
   const deletePasscode = import.meta.env.VITE_DELETE_PASSCODE as string | undefined
+  const galleryPasscode = import.meta.env.VITE_GALLERY_PASSCODE as string | undefined
   const [activeTab, setActiveTab] = useState<TabKey>('home')
   const [images, setImages] = useState<GalleryImage[]>([])
   const [isLoadingImages, setIsLoadingImages] = useState(true)
@@ -154,6 +156,7 @@ function App() {
   const [isDeleteEnabled, setIsDeleteEnabled] = useState(false)
   const [adminNotice, setAdminNotice] = useState<string | null>(null)
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
+  const [isGalleryGateOpen, setIsGalleryGateOpen] = useState(false)
   const [adminPasscodeInput, setAdminPasscodeInput] = useState('')
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null)
   const [isMusicOn, setIsMusicOn] = useState(false)
@@ -471,12 +474,43 @@ function App() {
     }
 
     if (deltaX < 0 && currentIndex < tabs.length - 1) {
-      setActiveTab(tabs[currentIndex + 1].key)
+      const nextKey = tabs[currentIndex + 1].key
+      if (nextKey === 'gallery') {
+        if (typeof window !== 'undefined' && window.sessionStorage.getItem('gallery_unlocked') === '1') {
+          setActiveTab(nextKey)
+        } else if (!galleryPasscode) {
+          setActiveTab(nextKey)
+        } else {
+          setIsGalleryGateOpen(true)
+        }
+      } else {
+        setActiveTab(nextKey)
+      }
     }
 
     if (deltaX > 0 && currentIndex > 0) {
       setActiveTab(tabs[currentIndex - 1].key)
     }
+  }
+
+  const handleTabChange = (tab: TabKey) => {
+    if (tab === 'gallery') {
+      if (typeof window !== 'undefined' && window.sessionStorage.getItem('gallery_unlocked') === '1') {
+        setActiveTab('gallery')
+        return
+      }
+
+      if (!galleryPasscode) {
+        // If no passcode configured, open gallery normally
+        setActiveTab('gallery')
+        return
+      }
+
+      setIsGalleryGateOpen(true)
+      return
+    }
+
+    setActiveTab(tab)
   }
 
   return (
@@ -490,7 +524,7 @@ function App() {
                 <li key={tab.key}>
                   <button
                     className={`nav-link ${activeTab === tab.key ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => handleTabChange(tab.key)}
                   >
                     {tab.label}
                   </button>
@@ -669,7 +703,20 @@ function App() {
         : null}
 
       {/* Bottom Navigation for Mobile/Tablet - Outside wedding-app */}
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+
+      <PasscodeGate
+        isOpen={isGalleryGateOpen}
+        onClose={() => setIsGalleryGateOpen(false)}
+        onSuccess={() => {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem('gallery_unlocked', '1')
+          }
+          setActiveTab('gallery')
+        }}
+        language={language}
+        passcode={galleryPasscode}
+      />
 
       {activeTab !== 'gallery' ? (
         <button
